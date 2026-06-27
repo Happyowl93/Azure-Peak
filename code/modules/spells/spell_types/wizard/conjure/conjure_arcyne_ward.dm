@@ -353,7 +353,7 @@
 	if(has_real_armor(H.wear_mask))
 		new_coverage &= ~(NOSE | MOUTH)
 
-	if(has_real_armor(H.wear_shirt) && has_real_armor(H.wear_armor))
+	if(has_real_armor(H.wear_shirt) || has_real_armor(H.wear_armor))
 		new_coverage &= ~(CHEST | GROIN | VITALS)
 
 	if(has_real_armor(H.wear_armor, ARM_LEFT | ARM_RIGHT) || has_real_armor(H.wear_shirt, ARM_LEFT | ARM_RIGHT))
