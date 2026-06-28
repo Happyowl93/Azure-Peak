@@ -166,6 +166,9 @@
 		animate(icon_state = "1", time = frame_stage)
 
 /obj/structure/rotation_piece/cog/find_and_propagate(list/checked, first = FALSE)
+	// Safety valve: mutually recursive with cog/propagate_rotation_change; cap depth to protect the stack.
+	if(length(checked) > MAX_ROTATION_PROPAGATION_DEPTH)
+		return
 	if(!length(checked))
 		checked = list()
 	checked |= src
@@ -189,6 +192,9 @@
 		rotation_network.update_animation_effect()
 
 /obj/structure/rotation_piece/cog/propagate_rotation_change(obj/structure/connector, list/checked, first = FALSE)
+	// Safety valve: mutually recursive with cog/find_and_propagate; cap depth to protect the stack.
+	if(length(checked) > MAX_ROTATION_PROPAGATION_DEPTH)
+		return
 	if(!length(checked))
 		checked = list()
 	checked |= src

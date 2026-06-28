@@ -12,3 +12,12 @@
 
 //Placing behavior of rotation contraption items
 #define PLACE_TOWARDS_USER	1
+
+/// Hard cap on a network's total stress (capacity). Generators can never push this above the ceiling,
+/// which guarantees the "energy without limit" accounting bug cannot make capacity run away.
+#define MAX_ROTATION_STRESS 65535
+
+/// Safety ceiling for rotation propagation. Propagation is a depth-first walk of the network graph;
+/// without a cap, a long line of components blows the BYOND call stack and crashes the server.
+/// A genuine network of this size is functionally unreachable in normal play.
+#define MAX_ROTATION_PROPAGATION_DEPTH 500

@@ -171,8 +171,10 @@
 
 // DOES NOT UPDATE NETWORK ANIMATION
 /obj/structure/proc/set_stress_generation(amount, check_network = TRUE)
+	amount = min(amount, MAX_ROTATION_STRESS)
 	rotation_network.total_stress -= last_stress_generation
 	rotation_network.total_stress += amount
+	rotation_network.total_stress = clamp(rotation_network.total_stress, 0, MAX_ROTATION_STRESS)
 	last_stress_generation = amount
 	if(check_network)
 		rotation_network.check_stress()
@@ -225,6 +227,10 @@
 	return TRUE
 
 /obj/structure/proc/propagate_rotation_change(obj/structure/connector, list/checked, first = FALSE)
+	// Safety valve: this proc is mutually recursive with find_and_propagate and walks the whole
+	// network depth-first. Without a cap, a long chain of components overflows the call stack.
+	if(length(checked) > MAX_ROTATION_PROPAGATION_DEPTH)
+		return
 	if(!length(checked))
 		checked = list()
 	checked |= src
@@ -241,6 +247,9 @@
 		connector.update_animation_effect()
 
 /obj/structure/proc/find_and_propagate(list/checked, first = FALSE)
+	// Safety valve: mutually recursive with propagate_rotation_change; cap depth to protect the stack.
+	if(length(checked) > MAX_ROTATION_PROPAGATION_DEPTH)
+		return
 	if(!length(checked))
 		checked = list()
 	checked |= src
@@ -310,20 +319,24 @@
 
 	return surrounding
 
-/obj/structure/proc/return_connected(obj/structure/deleted, list/passed, datum/rotation_network/network)
-	var/list/surroundings = return_surrounding_rotation(network)
+/obj/structure/proc/return_connected(obj/structure/deleted, datum/rotation_network/network)
+	// Iterative flood-fill. The previous version recursed one stack frame per connected piece,
+	// so a large network blew the call stack whenever any piece was destroyed or rotated.
+	var/list/visited = list()
 	var/list/connected = list()
-	if(!length(passed))
-		passed = list()
-	passed |= src
-	if(deleted in surroundings)
-		surroundings -= deleted
-
-	connected |= surroundings
-	for(var/obj/structure/surrounding in surroundings)
-		if(surrounding == src)
-			continue
-		if(surrounding in passed)
-			continue
-		connected |= surrounding.return_connected(deleted, passed, network)
+	var/list/queue = list(src)
+	visited[src] = TRUE
+	while(length(queue))
+		var/obj/structure/current = queue[1]
+		queue.Cut(1, 2)
+		connected |= current
+		var/list/surroundings = current.return_surrounding_rotation(network)
+		for(var/obj/structure/neighbor in surroundings)
+			if(neighbor == deleted)
+				continue
+			if(visited[neighbor])
+				continue
+			visited[neighbor] = TRUE
+			queue |= neighbor
+	connected -= deleted
 	return connected

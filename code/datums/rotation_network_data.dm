@@ -14,6 +14,8 @@
 /datum/rotation_network/proc/remove_connection(obj/structure/outgoing)
 	if(outgoing.last_stress_generation)
 		total_stress -= outgoing.last_stress_generation
+		// Reset the tracker so a piece that hops between networks re-adds its capacity exactly once.
+		outgoing.last_stress_generation = 0
 	if(!outgoing.stress_generator)
 		outgoing.rotation_direction = null
 		outgoing.set_rotations_per_minute(0)
@@ -53,14 +55,29 @@
 	rebuilding = TRUE
 	var/list/producers = list()
 	for(var/obj/structure/child in connected)
+		if(QDELETED(child))
+			continue
 		if(!child.stress_generator)
 			child.rotation_direction = null
 			child.set_rotations_per_minute(0)
-			var/old_stress_use = child.stress_use
-			child.set_stress_use(0)
-			child.set_stress_use(old_stress_use, check_network = FALSE)
+			// Keep the per-piece tracker in sync; the totals are recomputed below.
+			child.last_stress_added = child.stress_use
 			continue
 		producers |= child
+
+	// Recompute capacity and load from authoritative per-piece values instead of trusting
+	// the incrementally-patched totals. This is what prevents "energy without limit": every
+	// topology change routes through here, and the totals are made idempotent every time.
+	total_stress = 0
+	used_stress = 0
+	for(var/obj/structure/child in connected)
+		if(QDELETED(child))
+			continue
+		if(child.stress_generator)
+			total_stress += child.last_stress_generation
+		else if(child.stress_use)
+			used_stress += child.stress_use
+	total_stress = min(total_stress, MAX_ROTATION_STRESS)
 
 	for(var/obj/structure/producer in producers)
 		producer.find_and_propagate(list(), TRUE)
@@ -72,7 +89,7 @@
 	var/list/connected_copy = connected.Copy()
 
 	for(var/obj/structure/near in returned_nearbys)
-		var/list/returned = near.return_connected(deleted, list(), src)
+		var/list/returned = near.return_connected(deleted, src)
 		connected_copy -= deleted
 		if(length(connected_copy) == length(returned))
 			rebuild_group()
