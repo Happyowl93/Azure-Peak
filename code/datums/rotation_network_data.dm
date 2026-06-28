@@ -14,8 +14,6 @@
 /datum/rotation_network/proc/remove_connection(obj/structure/outgoing)
 	if(outgoing.last_stress_generation)
 		total_stress -= outgoing.last_stress_generation
-		// Reset the tracker so a piece that hops between networks re-adds its capacity exactly once.
-		outgoing.last_stress_generation = 0
 	if(!outgoing.stress_generator)
 		outgoing.rotation_direction = null
 		outgoing.set_rotations_per_minute(0)
