@@ -147,8 +147,6 @@ GLOBAL_VAR(accent_current_data)
 	switch(accent_name)
 		if("Dwarf accent", "Dwarf Gibberish accent")
 			return /datum/language/dwarvish
-		if("Dark Elf accent", "Elf accent")
-			return /datum/language/elvish
 		if("Grenzelhoft accent")
 			return /datum/language/grenzelhoftian
 		if("Half Orc accent", "Urban Orc accent")
