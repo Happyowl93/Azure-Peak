@@ -9,10 +9,6 @@
 			return strings("dwarfcleaner_replacement.json", type)
 		if("Dwarf Gibberish accent")
 			return strings("dwarf_replacement.json", type)
-		if("Dark Elf accent")
-			return strings("french_replacement.json", type)
-		if("Elf accent")
-			return strings("russian_replacement.json", type)
 		if("Grenzelhoft accent")
 			return strings("german_replacement.json", type)
 		if("Hammerhold accent")
@@ -21,7 +17,7 @@
 			return strings("proper_replacement.json", type)
 		if("Lizard accent")
 			return strings("brazillian_replacement.json", type)
-		if("Tiefling accent")
+		if("Etruscan accent")
 			return strings("spanish_replacement.json", type)
 		if("Half Orc accent")
 			return strings("middlespeak.json", type)
@@ -84,14 +80,19 @@ GLOBAL_VAR(accent_current_data)
 	// Per-character accent (applies if the player selected one).
 	// Accent files use varying section key names (e.g. "full", "dwarf", "start",
 	// "end", "syllable"), so we iterate whatever sections exist in the file.
+	// Skip the accent when speaking its associated native language natively —
+	// a Dwarf speaking Dwarvish doesn't have a "dwarven accent", they just speak.
 	if(H?.char_accent && H.char_accent != "No accent")
-		var/accent_file = get_accent_file(H.char_accent)
-		if(accent_file)
-			load_strings_file(accent_file)
-			var/list/file_data = GLOB.string_cache?[accent_file]
-			if(file_data)
-				for(var/section in file_data)
-					message = treat_message_accent(message, accent_file, section)
+		var/native_lang = get_accent_native_language(H.char_accent)
+		var/spoken_lang = speech_args[SPEECH_LANGUAGE]
+		if(!native_lang || spoken_lang != native_lang)
+			var/accent_file = get_accent_file(H.char_accent)
+			if(accent_file)
+				load_strings_file(accent_file)
+				var/list/file_data = GLOB.string_cache?[accent_file]
+				if(file_data)
+					for(var/section in file_data)
+						message = treat_message_accent(message, accent_file, section)
 
 	message = autopunct_bare(message)
 
@@ -110,10 +111,6 @@ GLOBAL_VAR(accent_current_data)
 			return "dwarfcleaner_replacement.json"
 		if("Dwarf Gibberish accent")
 			return "dwarf_replacement.json"
-		if("Dark Elf accent")
-			return "french_replacement.json"
-		if("Elf accent")
-			return "russian_replacement.json"
 		if("Grenzelhoft accent")
 			return "german_replacement.json"
 		if("Hammerhold accent")
@@ -122,7 +119,7 @@ GLOBAL_VAR(accent_current_data)
 			return "proper_replacement.json"
 		if("Lizard accent")
 			return "brazillian_replacement.json"
-		if("Tiefling accent")
+		if("Etruscan accent")
 			return "spanish_replacement.json"
 		if("Half Orc accent")
 			return "middlespeak.json"
@@ -136,6 +133,28 @@ GLOBAL_VAR(accent_current_data)
 			return "feline_replacement.json"
 		if("Slopes accent")
 			return "welsh_replacement.json"
+
+/**
+ * Maps a character accent name to the language its speaker would speak natively
+ * (and thus would not have an accent while speaking). Returns null if the accent
+ * has no associated native language — in that case the accent always applies.
+ *
+ * Arguments:
+ * * accent_name - The accent name from GLOB.character_accents.
+ * Returns: A language typepath, or null.
+ */
+/datum/species/proc/get_accent_native_language(accent_name)
+	switch(accent_name)
+		if("Dwarf accent", "Dwarf Gibberish accent")
+			return /datum/language/dwarvish
+		if("Dark Elf accent", "Elf accent")
+			return /datum/language/elvish
+		if("Grenzelhoft accent")
+			return /datum/language/grenzelhoftian
+		if("Half Orc accent", "Urban Orc accent")
+			return /datum/language/orcish
+		if("Etruscan accent")
+			return /datum/language/etruscan
 
 /**
  * Applies accent word replacement using a single pre-compiled alternation regex
