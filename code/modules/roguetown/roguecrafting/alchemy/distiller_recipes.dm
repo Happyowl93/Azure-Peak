@@ -6,21 +6,21 @@
 /datum/distiller_recipe/big_health_potion
 	name = "Elixir of Health (Strong)"
 	smells_like = "berry pie"
-	skill_required = SKILL_LEVEL_JOURNEYMAN
+	skill_required = SKILL_LEVEL_EXPERT
 	output_reagents = list(/datum/reagent/medicine/stronghealth = 90)
 	base_reagent = /datum/reagent/medicine/healthpot
 
 /datum/distiller_recipe/big_mana_potion
 	name = "Elixir of Mana (Strong)"
 	smells_like = "fear"
-	skill_required = SKILL_LEVEL_JOURNEYMAN
+	skill_required = SKILL_LEVEL_EXPERT
 	output_reagents = list(/datum/reagent/medicine/strongmana = 90)
 	base_reagent = /datum/reagent/medicine/manapot
 
 /datum/distiller_recipe/big_stamina_potion
 	name = "Elixir of Stamina (Strong)"
 	smells_like = "clean winds"
-	skill_required = SKILL_LEVEL_JOURNEYMAN
+	skill_required = SKILL_LEVEL_EXPERT
 	output_reagents = list(/datum/reagent/medicine/strongstam = 90)
 	base_reagent = /datum/reagent/medicine/stampot
 

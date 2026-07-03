@@ -20,7 +20,7 @@
 	anchored = TRUE
 	max_integrity = 300
 	var/list/ingredients = list()
-	var/maxingredients = 4
+	var/maxingredients = 6
 	/// The catalyst - a pinch of gold dust. Required to distill, never consumed.
 	var/obj/item/alch/golddust/catalyst
 	/// A player-fitted vessel (bucket/bottle/etc.) that catches the finished elixir, keeping it clear of the leftover base liquid.
@@ -46,7 +46,7 @@
 
 /obj/machinery/light/rogue/distiller/Initialize()
 	// No AMOUNT_VISIBLE - examine() below reports the contents (and their identity) itself.
-	create_reagents(500, DRAINABLE | REFILLABLE)
+	create_reagents(270, DRAINABLE | REFILLABLE)
 	. = ..()
 
 /obj/machinery/light/rogue/distiller/examine(mob/user)
@@ -123,7 +123,8 @@
 	. = ..()
 	. += span_info("Pour a finished basic potion into the distiller with a container on the 'FEED' intent, the way you would fill a cauldron with water.")
 	. += span_info("Then add ingredients that smell of the potion you wish to refine, and place a pinch of gold dust inside to act as a catalyst - it is not consumed.")
-	. += span_info("Fit an empty vessel - a bucket, bottle or vial - by using it on the distiller with the default intent. Once distilling begins the elixir drips into it slowly; if the vessel fills or none is fitted, the overflow is wasted.")
+	. += span_info("Right-click the distiller with a glass vessel in hand to slot it under the spout. Once distilling begins the elixir drips into it slowly; you can remove and swap vessels mid-batch by left-clicking the machine. Overflow is wasted.")
+	. += span_info("Loading more ingredients that smell of the target potion scales the batch: every 5 points of score doubles the yield (and the base consumed).")
 
 /// Tally the smell-points of the inserted ingredients, exactly like the cauldron.
 /// Returns an associative list of recipe path = points, sorted descending (paths may be
@@ -180,12 +181,21 @@
 		distilling = 0
 		visible_message(span_info("The mixture in [src] fails to bind together at all..."))
 		playsound(src, 'sound/misc/smelter_fin.ogg', 30, FALSE)
+		// Consume the ingredients so the machine doesn't re-heat and re-fail forever.
+		for(var/obj/item/ing in ingredients)
+			qdel(ing)
+		ingredients = list()
 		return
 	var/winning_path = outcomes[1]
+	var/winning_score = outcomes[winning_path]
 	if(!ispath(winning_path, /datum/distiller_recipe))
 		distilling = 0
 		visible_message(span_info("These ingredients would brew fine in a cauldron - the distiller does nothing with them."))
 		playsound(src, 'sound/misc/smelter_fin.ogg', 30, FALSE)
+		// Consume the ingredients so the machine doesn't re-heat and re-fail forever.
+		for(var/obj/item/ing in ingredients)
+			qdel(ing)
+		ingredients = list()
 		return
 	var/datum/distiller_recipe/recipe = locate(winning_path) in GLOB.distiller_recipes
 	if(!recipe)
@@ -195,25 +205,40 @@
 		distilling = 0
 		visible_message(span_info("The distiller can't refine anything without an alchemist to guide it."))
 		return
-	// The base liquid must be present in sufficient quantity.
-	if(reagents.get_reagent_amount(recipe.base_reagent) < recipe.base_reagent_amount)
+	// Scale output by ingredient score: every 5 points = one batch's worth.
+	// Two major-smell ingredients (6 pts) give a standard 1x batch; loading more
+	// matching ingredients raises the maximum yield. We then process whatever base
+	// is actually present, scaling output proportionally — no hard minimum.
+	var/batch_multiplier = max(1, round(winning_score / 5))
+	var/available_base = reagents.get_reagent_amount(recipe.base_reagent)
+	if(available_base <= 0)
 		distilling = 0
 		var/datum/reagent/base = recipe.base_reagent
-		visible_message(span_warning("There isn't enough [initial(base.name)] in [src] to refine!"))
+		visible_message(span_warning("The mixture reeks of [recipe.smells_like], but there's no [initial(base.name)] in [src] to refine it into [recipe.name]!"))
 		playsound(src, 'sound/misc/smelter_fin.ogg', 30, FALSE)
+		// Consume the ingredients so the machine doesn't re-heat and re-fail forever.
+		for(var/obj/item/ing in ingredients)
+			qdel(ing)
+		ingredients = list()
 		return
+	var/effective_multiplier = min(batch_multiplier, available_base / recipe.base_reagent_amount)
+	var/base_to_consume = min(available_base, recipe.base_reagent_amount * batch_multiplier)
 	// The catalyst must match.
 	if(!istype(catalyst, recipe.catalyst))
 		distilling = 0
 		var/atom/needed = recipe.catalyst
-		visible_message(span_warning("The reaction sputters out - it needs [initial(needed.name)] to catalyse."))
+		visible_message(span_warning("The reaction sputters out, it needs [initial(needed.name)] to catalyse."))
 		playsound(src, 'sound/misc/smelter_fin.ogg', 30, FALSE)
+		// Consume the ingredients so the machine doesn't re-heat and re-fail forever.
+		for(var/obj/item/ing in ingredients)
+			qdel(ing)
+		ingredients = list()
 		return
 	var/amt2raise = lastuser?.STAINT * 2
 	// Skill gate.
 	if(recipe.skill_required > lastuser?.get_skill_level(/datum/skill/craft/alchemy))
 		distilling = 0
-		visible_message(span_warning("The elixir curdles into a ruined mess! A more skilled alchemist is needed for this refinement."))
+		visible_message(span_warning("The [recipe.smells_like] elixir curdles into a ruined mess! A more skilled alchemist is needed to refine [recipe.name]."))
 		var/wasted = reagents.get_reagent_amount(recipe.base_reagent)
 		reagents.remove_reagent(recipe.base_reagent, wasted)
 		reagents.add_reagent(/datum/reagent/yuck, wasted)
@@ -222,15 +247,16 @@
 		ingredients = list()
 		lastuser?.adjust_experience(/datum/skill/craft/alchemy, amt2raise, FALSE) // Learn from failure.
 		return
-	// Commit the reaction. Consume the base liquid and ingredients now; the elixir will
-	// drip into the vessel over the next several ticks. Clearing ALL of the base reagent
-	// keeps leftover base from reacting with anything later.
-	reagents.remove_reagent(recipe.base_reagent, reagents.get_reagent_amount(recipe.base_reagent))
+	// Commit the reaction. Consume the base (capped by what the ingredients support)
+	// and scale the elixir yield to match. Ingredients are always fully consumed.
+	reagents.remove_reagent(recipe.base_reagent, base_to_consume)
 	for(var/obj/item/ing in ingredients)
 		qdel(ing)
 	ingredients = list()
 	active_recipe = recipe
-	drip_remaining = recipe.output_reagents.Copy()
+	drip_remaining = list()
+	for(var/rpath in recipe.output_reagents)
+		drip_remaining[rpath] = recipe.output_reagents[rpath] * effective_multiplier
 	overflow_warned = FALSE
 	distilling = 0
 	// Tint the falling drops with the first output reagent's colour.
@@ -313,9 +339,6 @@
 		if(ingredients.len >= maxingredients)
 			to_chat(user, span_warning("Nothing else can fit."))
 			return FALSE
-		if(!isnull(locate(I.type) in ingredients))
-			to_chat(user, span_warning("There is already \a [I] in [src]! That would ruin the mixture!"))
-			return FALSE
 		if(!user.transferItemToLoc(I, src))
 			to_chat(user, span_warning("[I] is stuck to my hand!"))
 			return FALSE
@@ -343,8 +366,37 @@
 		return TRUE
 	..()
 
+/obj/machinery/light/rogue/distiller/attack_right(mob/user)
+	// Right-click with a glass vessel in hand to slot it as the output container,
+	// so players don't have to "strike" the machine with it on the default intent.
+	var/obj/item/I = user.get_active_held_item()
+	if(istype(I, /obj/item/reagent_containers/glass))
+		if(output_container)
+			to_chat(user, span_warning("There is already a vessel fitted to [src]."))
+			return FALSE
+		if(!user.transferItemToLoc(I, src))
+			to_chat(user, span_warning("[I] is stuck to my hand!"))
+			return FALSE
+		output_container = I
+		lastuser = user
+		to_chat(user, span_info("I fit [I] to [src] to catch the elixir."))
+		update_icon()
+		return TRUE
+	return ..()
+
 /obj/machinery/light/rogue/distiller/attack_hand(mob/user, params)
 	if(on)
+		// Allow removing the output vessel even while the distiller is running, so
+		// alchemists can swap in a fresh container to catch the rest of a batch.
+		if(output_container)
+			var/obj/item/reagent_containers/glass/vessel = output_container
+			output_container = null
+			vessel.loc = user.loc
+			user.put_in_active_hand(vessel)
+			user.visible_message(span_info("[user] removes [vessel] from [src]."))
+			overflow_warned = FALSE // Re-enable the overflow warning for the next vessel.
+			update_icon()
+			return
 		if(ingredients.len || active_recipe)
 			to_chat(user, span_warning("Something's distilling."))
 			return
@@ -363,6 +415,7 @@
 		vessel.loc = user.loc
 		user.put_in_active_hand(vessel)
 		user.visible_message(span_info("[user] removes [vessel] from [src]."))
+		overflow_warned = FALSE // Re-enable the overflow warning for the next vessel.
 		update_icon()
 		return
 	if(catalyst)
