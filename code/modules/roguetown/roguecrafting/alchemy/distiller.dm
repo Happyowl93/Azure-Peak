@@ -30,8 +30,33 @@
 	roundstart_forbid = TRUE
 
 /obj/machinery/light/rogue/distiller/Initialize()
-	create_reagents(500, DRAINABLE | AMOUNT_VISIBLE | REFILLABLE)
+	// No AMOUNT_VISIBLE - examine() below reports the contents (and their identity) itself.
+	create_reagents(500, DRAINABLE | REFILLABLE)
 	. = ..()
+
+/obj/machinery/light/rogue/distiller/examine(mob/user)
+	. = ..()
+	// The catalyst cradle.
+	if(catalyst)
+		. += span_info("[catalyst.name] rests in the catalyst cradle.")
+	else
+		. += span_warning("The catalyst cradle is empty.")
+	// The base liquid held in the alembic.
+	if(reagents?.total_volume)
+		var/list/held = list()
+		for(var/datum/reagent/R as anything in reagents.reagent_list)
+			held += "[round(R.volume)] [UNIT_FORM_STRING(round(R.volume))] of <font color=[R.color]>[R.name]</font>"
+		. += span_info("The alembic holds [english_list(held)].")
+	else
+		. += span_info("The alembic is dry.")
+	// The ingredients steeping inside.
+	if(length(ingredients))
+		var/list/ing_names = list()
+		for(var/obj/item/I as anything in ingredients)
+			ing_names += I.name
+		. += span_info("Steeping within ([length(ingredients)]/[maxingredients]): [english_list(ing_names)].")
+	else
+		. += span_info("No ingredients have been added.")
 
 /obj/machinery/light/rogue/distiller/Destroy()
 	if(catalyst)
