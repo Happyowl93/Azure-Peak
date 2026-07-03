@@ -25,7 +25,20 @@
 	var/obj/item/alch/golddust/catalyst
 	/// A player-fitted vessel (bucket/bottle/etc.) that catches the finished elixir, keeping it clear of the leftover base liquid.
 	var/obj/item/reagent_containers/glass/output_container
+	/// Heat-up counter, counts up to [heatup_ticks] before a locked-in batch starts dripping.
 	var/distilling = 0
+	/// Process ticks of heat-up before the first drop forms.
+	var/heatup_ticks = 10
+	/// The recipe currently dripping out. While set, the machine is in its drip phase.
+	var/datum/distiller_recipe/active_recipe
+	/// Output reagents still to drip this batch (reagent path -> units remaining).
+	var/list/drip_remaining
+	/// Units of elixir that drip out per process tick.
+	var/drip_rate = 6
+	/// Colour of the current elixir, used to tint the falling-drip overlay.
+	var/drip_color = "#ffffff"
+	/// Set once we've warned that drips are spilling, so the warning doesn't spam.
+	var/overflow_warned = FALSE
 	var/mob/living/carbon/human/lastuser
 	fueluse = 20 MINUTES
 	crossfire = FALSE
@@ -70,6 +83,9 @@
 			. += span_info("An empty [output_container.name] is fitted to the spout.")
 	else
 		. += span_warning("No vessel is fitted to the spout to catch the elixir.")
+	// Whether a batch is currently dripping.
+	if(active_recipe)
+		. += span_info("It is busy distilling, elixir dripping from the spout.")
 
 /obj/machinery/light/rogue/distiller/Destroy()
 	if(catalyst)
@@ -86,6 +102,19 @@
 		qdel(reagents)
 	return ..()
 
+/obj/machinery/light/rogue/distiller/update_icon()
+	..() // sets the base distillery0/distillery1 icon_state
+	cut_overlays()
+	// Bucket gets its own overlay; every other glass vessel shows the bottle.
+	if(output_container)
+		var/overlay_state = istype(output_container, /obj/item/reagent_containers/glass/bucket) ? "out_bucket" : "out_bottle"
+		add_overlay(mutable_appearance(icon, overlay_state))
+	// While actively distilling, drops fall from the spout, tinted the elixir's colour.
+	if(active_recipe && on)
+		var/mutable_appearance/drip = mutable_appearance(icon, "distillery_drip")
+		drip.color = drip_color
+		add_overlay(drip)
+
 /obj/machinery/light/rogue/distiller/burn_out()
 	distilling = 0
 	..()
@@ -94,7 +123,7 @@
 	. = ..()
 	. += span_info("Pour a finished basic potion into the distiller with a container on the 'FEED' intent, the way you would fill a cauldron with water.")
 	. += span_info("Then add ingredients that smell of the potion you wish to refine, and place a pinch of gold dust inside to act as a catalyst - it is not consumed.")
-	. += span_info("Fit an empty vessel - a bucket, bottle or vial - by using it on the distiller with the default intent. The finished elixir collects there instead of the alembic.")
+	. += span_info("Fit an empty vessel - a bucket, bottle or vial - by using it on the distiller with the default intent. Once distilling begins the elixir drips into it slowly; if the vessel fills or none is fitted, the overflow is wasted.")
 
 /// Tally the smell-points of the inserted ingredients, exactly like the cauldron.
 /// Returns an associative list of recipe path = points, sorted descending (paths may be
@@ -125,20 +154,27 @@
 
 /obj/machinery/light/rogue/distiller/process()
 	..()
-	update_icon()
 	if(!on)
 		return
+	// Drip phase: a batch is locked in and slowly filling the vessel.
+	if(active_recipe)
+		process_drip()
+		return
+	// Otherwise, heat up toward starting a new batch.
 	if(!ingredients.len || !catalyst)
 		return
-	if(distilling < 20)
+	if(distilling < heatup_ticks)
 		if(reagents?.total_volume > 0)
 			distilling++
 			if(prob(10))
 				playsound(src, "bubbles", 100, FALSE)
 		return
-	if(distilling != 20)
-		return
-	// distilling == 20: resolve the reaction.
+	// Heat-up complete - validate the batch and either begin dripping or fail.
+	try_begin_distillation()
+
+/// Validate the loaded ingredients/base/catalyst once heat-up finishes, and if they make a
+/// valid recipe, commit the reaction so it can drip into the vessel over the coming ticks.
+/obj/machinery/light/rogue/distiller/proc/try_begin_distillation()
 	var/list/outcomes = score_ingredients()
 	if(!outcomes.len || outcomes[outcomes[1]] < 5)
 		distilling = 0
@@ -173,21 +209,6 @@
 		visible_message(span_warning("The reaction sputters out - it needs [initial(needed.name)] to catalyse."))
 		playsound(src, 'sound/misc/smelter_fin.ogg', 30, FALSE)
 		return
-	// A vessel must be fitted to catch the elixir, with room for all of it.
-	var/output_volume = 0
-	for(var/opath in recipe.output_reagents)
-		output_volume += recipe.output_reagents[opath]
-	if(output_volume)
-		if(!output_container)
-			distilling = 0
-			visible_message(span_warning("The elixir has nowhere to go - fit a vessel to catch it."))
-			playsound(src, 'sound/misc/smelter_fin.ogg', 30, FALSE)
-			return
-		if((output_container.reagents.maximum_volume - output_container.reagents.total_volume) < output_volume)
-			distilling = 0
-			visible_message(span_warning("[output_container] is too small to hold the elixir!"))
-			playsound(src, 'sound/misc/smelter_fin.ogg', 30, FALSE)
-			return
 	var/amt2raise = lastuser?.STAINT * 2
 	// Skill gate.
 	if(recipe.skill_required > lastuser?.get_skill_level(/datum/skill/craft/alchemy))
@@ -201,26 +222,78 @@
 		ingredients = list()
 		lastuser?.adjust_experience(/datum/skill/craft/alchemy, amt2raise, FALSE) // Learn from failure.
 		return
-	// Success - spend the base liquid and the ingredients, keep the catalyst.
-	// Clear ALL of the base reagent (not just the required amount), so leftover base
-	// potion can't conflict with the freshly-made output and ruin it into sludge.
+	// Commit the reaction. Consume the base liquid and ingredients now; the elixir will
+	// drip into the vessel over the next several ticks. Clearing ALL of the base reagent
+	// keeps leftover base from reacting with anything later.
 	reagents.remove_reagent(recipe.base_reagent, reagents.get_reagent_amount(recipe.base_reagent))
 	for(var/obj/item/ing in ingredients)
 		qdel(ing)
 	ingredients = list()
-	// The elixir collects in the fitted vessel, never the alembic, so it can't react with the base.
-	if(recipe.output_reagents.len)
-		output_container.reagents.add_reagent_list(recipe.output_reagents)
+	active_recipe = recipe
+	drip_remaining = recipe.output_reagents.Copy()
+	overflow_warned = FALSE
+	distilling = 0
+	// Tint the falling drops with the first output reagent's colour.
+	drip_color = "#ffffff"
+	for(var/dpath in recipe.output_reagents)
+		var/datum/reagent/DR = dpath
+		drip_color = initial(DR.color)
+		break
+	// Physical item outputs aren't liquids to drip, so spawn them right away.
 	if(recipe.output_items.len)
 		for(var/itempath in recipe.output_items)
 			new itempath(get_turf(src))
-	visible_message(span_info("The distiller settles with a faint [recipe.smells_like] smell, its work refined."))
+	// Reward the alchemist for the successful refinement.
 	record_featured_stat(FEATURED_STATS_ALCHEMISTS, lastuser)
 	record_round_statistic(STATS_POTIONS_BREWED)
 	lastuser?.adjust_experience(/datum/skill/craft/alchemy, amt2raise, FALSE)
+	visible_message(span_info("[src] shudders and begins to drip a faint [recipe.smells_like] elixir."))
 	playsound(src, "bubbles", 100, TRUE)
-	playsound(src, 'sound/misc/smelter_fin.ogg', 30, FALSE)
-	distilling = 21
+	update_icon()
+
+/// Drip a measure of each pending output reagent into the fitted vessel. Anything that
+/// doesn't fit - because the vessel is full or none is fitted - spills out and is lost.
+/obj/machinery/light/rogue/distiller/proc/process_drip()
+	var/any_left = FALSE
+	var/spilled = FALSE
+	for(var/rpath in drip_remaining)
+		var/amount = drip_remaining[rpath]
+		if(amount <= 0)
+			continue
+		var/this_drip = min(amount, drip_rate)
+		drip_remaining[rpath] = amount - this_drip
+		if((amount - this_drip) > 0)
+			any_left = TRUE
+		// How much of this drip can the vessel actually hold?
+		var/landed = 0
+		if(output_container?.reagents)
+			var/room = output_container.reagents.maximum_volume - output_container.reagents.total_volume
+			landed = min(this_drip, max(room, 0))
+			if(landed > 0)
+				output_container.reagents.add_reagent(rpath, landed)
+		if(landed < this_drip)
+			spilled = TRUE
+	if(spilled && !overflow_warned)
+		overflow_warned = TRUE
+		if(output_container)
+			visible_message(span_warning("[output_container] is full - the elixir overflows and is lost!"))
+		else
+			visible_message(span_warning("The elixir drips from the spout with no vessel to catch it, and is lost!"))
+	if(prob(25))
+		playsound(src, "bubbles", 60, FALSE)
+	if(!any_left)
+		finish_distillation()
+
+/// End the current batch, whether the vessel caught it all or some spilled.
+/obj/machinery/light/rogue/distiller/proc/finish_distillation()
+	if(active_recipe)
+		visible_message(span_info("The distiller settles, its [active_recipe.smells_like] work complete."))
+		playsound(src, 'sound/misc/smelter_fin.ogg', 30, FALSE)
+	active_recipe = null
+	drip_remaining = null
+	overflow_warned = FALSE
+	distilling = 0
+	update_icon()
 
 /obj/machinery/light/rogue/distiller/attackby(obj/item/I, mob/user, params)
 	// Gold dust is an /obj/item/alch, so catch it as the catalyst before the ingredient branch below.
@@ -266,12 +339,13 @@
 		output_container = I
 		lastuser = user
 		to_chat(user, span_info("I fit [I] to [src] to catch the elixir."))
+		update_icon()
 		return TRUE
 	..()
 
 /obj/machinery/light/rogue/distiller/attack_hand(mob/user, params)
 	if(on)
-		if(ingredients.len)
+		if(ingredients.len || active_recipe)
 			to_chat(user, span_warning("Something's distilling."))
 			return
 		to_chat(user, span_info("Nothing's distilling."))
@@ -289,6 +363,7 @@
 		vessel.loc = user.loc
 		user.put_in_active_hand(vessel)
 		user.visible_message(span_info("[user] removes [vessel] from [src]."))
+		update_icon()
 		return
 	if(catalyst)
 		var/obj/item/alch/golddust/gem = catalyst
@@ -314,4 +389,5 @@
 		chem_splash(loc, 2, list(reagents))
 	user.visible_message(span_info("[user] kicks [src], spilling its contents!"))
 	playsound(src, 'sound/items/beartrap2.ogg', 100, FALSE)
+	update_icon()
 	return ..()
