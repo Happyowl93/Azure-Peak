@@ -7,7 +7,7 @@
  * - The recipe's base_reagent poured in as a liquid (water for stat potions, or the
  *   weaker potion for the "strong" variants), in sufficient quantity.
  * - Ingredients that smell of the target potion (scored exactly like the cauldron).
- * - The recipe's catalyst gem, which is required but NEVER consumed.
+ * - A pinch of gold dust as the catalyst, which is required but NEVER consumed.
  */
 /obj/machinery/light/rogue/distiller
 	name = "distiller"
@@ -21,8 +21,8 @@
 	max_integrity = 300
 	var/list/ingredients = list()
 	var/maxingredients = 4
-	/// The catalyst gem. Required to distill, never consumed.
-	var/obj/item/roguegem/catalyst
+	/// The catalyst - a pinch of gold dust. Required to distill, never consumed.
+	var/obj/item/alch/golddust/catalyst
 	var/distilling = 0
 	var/mob/living/carbon/human/lastuser
 	fueluse = 20 MINUTES
@@ -52,7 +52,7 @@
 /obj/machinery/light/rogue/distiller/get_mechanics_examine(mob/user)
 	. = ..()
 	. += span_info("Pour a finished basic potion into the distiller with a container on the 'FEED' intent, the way you would fill a cauldron with water.")
-	. += span_info("Then add ingredients that smell of the potion you wish to refine, and place a gemstone inside to act as a catalyst - the gem is not consumed.")
+	. += span_info("Then add ingredients that smell of the potion you wish to refine, and place a pinch of gold dust inside to act as a catalyst - it is not consumed.")
 
 /// Tally the smell-points of the inserted ingredients, exactly like the cauldron.
 /// Returns an associative list of recipe path = points, sorted descending (paths may be
@@ -128,7 +128,7 @@
 	if(!istype(catalyst, recipe.catalyst))
 		distilling = 0
 		var/atom/needed = recipe.catalyst
-		visible_message(span_warning("The reaction sputters out - it needs \a [initial(needed.name)] to catalyse."))
+		visible_message(span_warning("The reaction sputters out - it needs [initial(needed.name)] to catalyse."))
 		playsound(src, 'sound/misc/smelter_fin.ogg', 30, FALSE)
 		return
 	var/amt2raise = lastuser?.STAINT * 2
@@ -165,6 +165,19 @@
 	distilling = 21
 
 /obj/machinery/light/rogue/distiller/attackby(obj/item/I, mob/user, params)
+	// Gold dust is an /obj/item/alch, so catch it as the catalyst before the ingredient branch below.
+	if(istype(I, /obj/item/alch/golddust))
+		if(catalyst)
+			to_chat(user, span_warning("There is already a catalyst in [src]."))
+			return FALSE
+		if(!user.transferItemToLoc(I, src))
+			to_chat(user, span_warning("[I] is stuck to my hand!"))
+			return FALSE
+		catalyst = I
+		distilling = 0
+		lastuser = user
+		to_chat(user, span_info("I set [I] into [src] as a catalyst."))
+		return TRUE
 	if(istype(I, /obj/item/alch))
 		if(ingredients.len >= maxingredients)
 			to_chat(user, span_warning("Nothing else can fit."))
@@ -181,18 +194,6 @@
 		lastuser = user
 		playsound(src, "bubbles", 100, TRUE)
 		update_icon()
-		return TRUE
-	if(istype(I, /obj/item/roguegem))
-		if(catalyst)
-			to_chat(user, span_warning("There is already a catalyst in [src]."))
-			return FALSE
-		if(!user.transferItemToLoc(I, src))
-			to_chat(user, span_warning("[I] is stuck to my hand!"))
-			return FALSE
-		catalyst = I
-		distilling = 0
-		lastuser = user
-		to_chat(user, span_info("I set [I] into [src] as a catalyst."))
 		return TRUE
 	..()
 
@@ -211,7 +212,7 @@
 		user.visible_message(span_info("[user] pulls [I] from [src]."))
 		return
 	if(catalyst)
-		var/obj/item/roguegem/gem = catalyst
+		var/obj/item/alch/golddust/gem = catalyst
 		catalyst = null
 		gem.loc = user.loc
 		user.put_in_active_hand(gem)
