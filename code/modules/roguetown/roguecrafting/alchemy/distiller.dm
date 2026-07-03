@@ -23,6 +23,8 @@
 	var/maxingredients = 4
 	/// The catalyst - a pinch of gold dust. Required to distill, never consumed.
 	var/obj/item/alch/golddust/catalyst
+	/// A player-fitted vessel (bucket/bottle/etc.) that catches the finished elixir, keeping it clear of the leftover base liquid.
+	var/obj/item/reagent_containers/glass/output_container
 	var/distilling = 0
 	var/mob/living/carbon/human/lastuser
 	fueluse = 20 MINUTES
@@ -57,11 +59,25 @@
 		. += span_info("Steeping within ([length(ingredients)]/[maxingredients]): [english_list(ing_names)].")
 	else
 		. += span_info("No ingredients have been added.")
+	// The output vessel fitted to the spout.
+	if(output_container)
+		if(output_container.reagents?.total_volume)
+			var/list/caught = list()
+			for(var/datum/reagent/R as anything in output_container.reagents.reagent_list)
+				caught += "[round(R.volume)] [UNIT_FORM_STRING(round(R.volume))] of <font color=[R.color]>[R.name]</font>"
+			. += span_info("[output_container.name] is fitted to the spout, holding [english_list(caught)].")
+		else
+			. += span_info("An empty [output_container.name] is fitted to the spout.")
+	else
+		. += span_warning("No vessel is fitted to the spout to catch the elixir.")
 
 /obj/machinery/light/rogue/distiller/Destroy()
 	if(catalyst)
 		catalyst.forceMove(get_turf(src))
 		catalyst = null
+	if(output_container)
+		output_container.forceMove(get_turf(src))
+		output_container = null
 	for(var/obj/item/ing in ingredients)
 		ing.forceMove(get_turf(src))
 	ingredients = list()
@@ -78,6 +94,7 @@
 	. = ..()
 	. += span_info("Pour a finished basic potion into the distiller with a container on the 'FEED' intent, the way you would fill a cauldron with water.")
 	. += span_info("Then add ingredients that smell of the potion you wish to refine, and place a pinch of gold dust inside to act as a catalyst - it is not consumed.")
+	. += span_info("Fit an empty vessel - a bucket, bottle or vial - by using it on the distiller with the default intent. The finished elixir collects there instead of the alembic.")
 
 /// Tally the smell-points of the inserted ingredients, exactly like the cauldron.
 /// Returns an associative list of recipe path = points, sorted descending (paths may be
@@ -156,6 +173,21 @@
 		visible_message(span_warning("The reaction sputters out - it needs [initial(needed.name)] to catalyse."))
 		playsound(src, 'sound/misc/smelter_fin.ogg', 30, FALSE)
 		return
+	// A vessel must be fitted to catch the elixir, with room for all of it.
+	var/output_volume = 0
+	for(var/opath in recipe.output_reagents)
+		output_volume += recipe.output_reagents[opath]
+	if(output_volume)
+		if(!output_container)
+			distilling = 0
+			visible_message(span_warning("The elixir has nowhere to go - fit a vessel to catch it."))
+			playsound(src, 'sound/misc/smelter_fin.ogg', 30, FALSE)
+			return
+		if((output_container.reagents.maximum_volume - output_container.reagents.total_volume) < output_volume)
+			distilling = 0
+			visible_message(span_warning("[output_container] is too small to hold the elixir!"))
+			playsound(src, 'sound/misc/smelter_fin.ogg', 30, FALSE)
+			return
 	var/amt2raise = lastuser?.STAINT * 2
 	// Skill gate.
 	if(recipe.skill_required > lastuser?.get_skill_level(/datum/skill/craft/alchemy))
@@ -176,8 +208,9 @@
 	for(var/obj/item/ing in ingredients)
 		qdel(ing)
 	ingredients = list()
+	// The elixir collects in the fitted vessel, never the alembic, so it can't react with the base.
 	if(recipe.output_reagents.len)
-		reagents.add_reagent_list(recipe.output_reagents)
+		output_container.reagents.add_reagent_list(recipe.output_reagents)
 	if(recipe.output_items.len)
 		for(var/itempath in recipe.output_items)
 			new itempath(get_turf(src))
@@ -220,6 +253,20 @@
 		playsound(src, "bubbles", 100, TRUE)
 		update_icon()
 		return TRUE
+	if(istype(I, /obj/item/reagent_containers/glass))
+		// Only fit the vessel on the default intent; POUR/fill/splash still drive the normal fill-and-drain.
+		if(user.used_intent?.type != INTENT_GENERIC)
+			return ..()
+		if(output_container)
+			to_chat(user, span_warning("There is already a vessel fitted to [src]."))
+			return FALSE
+		if(!user.transferItemToLoc(I, src))
+			to_chat(user, span_warning("[I] is stuck to my hand!"))
+			return FALSE
+		output_container = I
+		lastuser = user
+		to_chat(user, span_info("I fit [I] to [src] to catch the elixir."))
+		return TRUE
 	..()
 
 /obj/machinery/light/rogue/distiller/attack_hand(mob/user, params)
@@ -236,6 +283,13 @@
 		user.put_in_active_hand(I)
 		user.visible_message(span_info("[user] pulls [I] from [src]."))
 		return
+	if(output_container)
+		var/obj/item/reagent_containers/glass/vessel = output_container
+		output_container = null
+		vessel.loc = user.loc
+		user.put_in_active_hand(vessel)
+		user.visible_message(span_info("[user] removes [vessel] from [src]."))
+		return
 	if(catalyst)
 		var/obj/item/alch/golddust/gem = catalyst
 		catalyst = null
@@ -250,6 +304,9 @@
 	if(catalyst)
 		catalyst.forceMove(get_turf(user))
 		catalyst = null
+	if(output_container)
+		output_container.forceMove(get_turf(user))
+		output_container = null
 	for(var/obj/item/in_still in ingredients)
 		ingredients -= in_still
 		in_still.forceMove(get_turf(user))
