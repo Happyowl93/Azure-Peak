@@ -46,44 +46,52 @@
 	base_reagent = /datum/reagent/stampoison
 
 //Stat potions - distilled from plain water, gated by the catalyst and expert skill.
+// Stat potions are weaker than strong potions, so they output half as much per score.
 /datum/distiller_recipe/str_potion
 	name = "Potion of Mountain Muscles"
 	smells_like = "petrichor"
 	skill_required = SKILL_LEVEL_EXPERT
 	output_reagents = list(/datum/reagent/buff/strength = 30)
+	potency_per_score = 7.5
 
 /datum/distiller_recipe/per_potion
 	name = "Potion of Keen Eye"
 	smells_like = "fire"
 	skill_required = SKILL_LEVEL_EXPERT
 	output_reagents = list(/datum/reagent/buff/perception = 30)
+	potency_per_score = 7.5
 
 /datum/distiller_recipe/end_potion
 	name = "Potion of Enduring Fortitude"
 	smells_like = "mountain air"
 	skill_required = SKILL_LEVEL_EXPERT
 	output_reagents = list(/datum/reagent/buff/endurance = 30)
+	potency_per_score = 7.5
 
 /datum/distiller_recipe/con_potion
 	name = "Potion of Stone Flesh"
 	smells_like = "earth"
 	skill_required = SKILL_LEVEL_EXPERT
 	output_reagents = list(/datum/reagent/buff/constitution = 30)
+	potency_per_score = 7.5
 
 /datum/distiller_recipe/int_potion
 	name = "Potion of Keen Mind"
 	smells_like = "water"
 	skill_required = SKILL_LEVEL_EXPERT
 	output_reagents = list(/datum/reagent/buff/intelligence = 30)
+	potency_per_score = 7.5
 
 /datum/distiller_recipe/spd_potion
 	name = "Potion of Fleet Foot"
 	smells_like = "clean air"
 	skill_required = SKILL_LEVEL_EXPERT
 	output_reagents = list(/datum/reagent/buff/speed = 30)
+	potency_per_score = 7.5
 
 /datum/distiller_recipe/lck_potion
 	name = "Potion of Seven Clovers"
 	smells_like = "calming"
 	skill_required = SKILL_LEVEL_EXPERT
 	output_reagents = list(/datum/reagent/buff/fortune = 30)
+	potency_per_score = 7.5

@@ -21,6 +21,9 @@
 	var/base_reagent_amount = 90
 	/// The catalyst that must sit in the distiller - gold dust by default. Required to react, NEVER consumed.
 	var/catalyst = /obj/item/alch/golddust
+	/// Units of output per point of ingredient score. Max score is 18 (6 ingredients × 3),
+	/// so strong potions use 15 (18 × 15 = 270u). Stat potions override to 7.5 (half).
+	var/potency_per_score = 15
 
 /datum/distiller_recipe/proc/generate_html(mob/user)
 	var/client/client = user

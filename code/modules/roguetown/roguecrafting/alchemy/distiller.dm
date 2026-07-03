@@ -124,7 +124,7 @@
 	. += span_info("Pour a finished basic potion into the distiller with a container on the 'FEED' intent, the way you would fill a cauldron with water.")
 	. += span_info("Then add ingredients that smell of the potion you wish to refine, and place a pinch of gold dust inside to act as a catalyst - it is not consumed.")
 	. += span_info("Right-click the distiller with a glass vessel in hand to slot it under the spout. Once distilling begins the elixir drips into it slowly; you can remove and swap vessels mid-batch by left-clicking the machine. Overflow is wasted.")
-	. += span_info("Loading more ingredients that smell of the target potion scales the batch: every 5 points of score doubles the yield (and the base consumed).")
+	. += span_info("Loading more ingredients that smell of the target potion scales the yield.")
 
 /// Tally the smell-points of the inserted ingredients, exactly like the cauldron.
 /// Returns an associative list of recipe path = points, sorted descending (paths may be
@@ -205,24 +205,31 @@
 		distilling = 0
 		visible_message(span_info("The distiller can't refine anything without an alchemist to guide it."))
 		return
-	// Scale output by ingredient score: every 5 points = one batch's worth.
-	// Two major-smell ingredients (6 pts) give a standard 1x batch; loading more
-	// matching ingredients raises the maximum yield. We then process whatever base
-	// is actually present, scaling output proportionally — no hard minimum.
-	var/batch_multiplier = max(1, round(winning_score / 5))
+	// Scale output linearly: total output = winning_score × recipe.potency_per_score.
+	// Strong potions/poisons: 15/score (score 18 → 270u). Stat potions: 7.5/score (half).
+	var/total_output = winning_score * recipe.potency_per_score
 	var/available_base = reagents.get_reagent_amount(recipe.base_reagent)
 	if(available_base <= 0)
 		distilling = 0
 		var/datum/reagent/base = recipe.base_reagent
-		visible_message(span_warning("The mixture reeks of [recipe.smells_like], but there's no [initial(base.name)] in [src] to refine it into [recipe.name]!"))
+		visible_message(span_warning("The mixture reeks of [recipe.smells_like] - but there's no [initial(base.name)] in [src] to refine it into [recipe.name]!"))
 		playsound(src, 'sound/misc/smelter_fin.ogg', 30, FALSE)
 		// Consume the ingredients so the machine doesn't re-heat and re-fail forever.
 		for(var/obj/item/ing in ingredients)
 			qdel(ing)
 		ingredients = list()
 		return
-	var/effective_multiplier = min(batch_multiplier, available_base / recipe.base_reagent_amount)
-	var/base_to_consume = min(available_base, recipe.base_reagent_amount * batch_multiplier)
+	// Figure out how much base this much output would need, then process whatever's
+	// available. If base falls short, output scales down proportionally — the rest
+	// of the ingredient score is simply discarded.
+	var/standard_output = 0
+	for(var/rpath in recipe.output_reagents)
+		standard_output += recipe.output_reagents[rpath]
+	var/base_per_output = standard_output > 0 ? recipe.base_reagent_amount / standard_output : 1
+	var/max_output_from_base = available_base / base_per_output
+	var/actual_output = min(total_output, max_output_from_base)
+	var/base_to_consume = actual_output * base_per_output
+	var/output_multiplier = standard_output > 0 ? actual_output / standard_output : 1
 	// The catalyst must match.
 	if(!istype(catalyst, recipe.catalyst))
 		distilling = 0
@@ -247,8 +254,8 @@
 		ingredients = list()
 		lastuser?.adjust_experience(/datum/skill/craft/alchemy, amt2raise, FALSE) // Learn from failure.
 		return
-	// Commit the reaction. Consume the base (capped by what the ingredients support)
-	// and scale the elixir yield to match. Ingredients are always fully consumed.
+	// Commit the reaction. Consume the base (capped by what's available) and scale
+	// the elixir yield to match. Ingredients are always fully consumed.
 	reagents.remove_reagent(recipe.base_reagent, base_to_consume)
 	for(var/obj/item/ing in ingredients)
 		qdel(ing)
@@ -256,7 +263,7 @@
 	active_recipe = recipe
 	drip_remaining = list()
 	for(var/rpath in recipe.output_reagents)
-		drip_remaining[rpath] = recipe.output_reagents[rpath] * effective_multiplier
+		drip_remaining[rpath] = recipe.output_reagents[rpath] * output_multiplier
 	overflow_warned = FALSE
 	distilling = 0
 	// Tint the falling drops with the first output reagent's colour.
