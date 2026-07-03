@@ -93,6 +93,11 @@
 				sortTim(outcomes,cmp=/proc/cmp_numeric_dsc,associative = 1)
 				if(outcomes[outcomes[1]] >= 5)
 					var/result_path = outcomes[1]
+					// Advanced recipes are /datum/distiller_recipe - a plain cauldron can't make them.
+					if(ispath(result_path, /datum/distiller_recipe))
+						brewing = 0
+						src.visible_message(span_warning("These reagents are too refined for a mere cauldron - they must be distilled."))
+						return
 					var/datum/alch_cauldron_recipe/found_recipe = new result_path
 					var/amt2raise = lastuser?.STAINT*2
 					var/in_cauldron = src?.reagents?.get_reagent_amount(/datum/reagent/water)

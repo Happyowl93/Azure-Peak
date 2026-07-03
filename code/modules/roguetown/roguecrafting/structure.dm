@@ -1417,6 +1417,16 @@
 	skillcraft = /datum/skill/craft/alchemy
 	craftdiff = 1
 
+/datum/crafting_recipe/roguetown/structure/distiller
+	name = "alchemy distiller"
+	category = "Misc"
+	result = /obj/machinery/light/rogue/distiller
+	reqs = list(/obj/item/ingot/iron = 2, /obj/item/reagent_containers/glass/bottle = 1)
+	verbage_simple = "assemble"
+	verbage = "assembles"
+	skillcraft = /datum/skill/craft/alchemy
+	craftdiff = 4
+
 /datum/crafting_recipe/roguetown/structure/ceramicswheel
 	name = "potter's wheel"
 	category = "Misc"

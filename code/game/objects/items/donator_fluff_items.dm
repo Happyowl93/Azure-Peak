@@ -44,9 +44,9 @@ mas//Lazily shoving all donator fluff items in here for now. Feel free to make t
 	muteinmouth = FALSE
 	alternate_worn_layer  = 8.9 //On top of helmet
 	mill_result = /obj/item/reagent_containers/food/snacks/grown/rogue/rosa_petals/azure
-	major_pot = /datum/alch_cauldron_recipe/lck_potion
+	major_pot = /datum/distiller_recipe/lck_potion
 	med_pot = /datum/alch_cauldron_recipe/antidote
-	minor_pot = /datum/alch_cauldron_recipe/restoration_potion
+	minor_pot = /datum/distiller_recipe/restoration_potion
 
 /obj/item/alch/rosa/azure/equipped(mob/living/carbon/human/user, slot)
 	. = ..()

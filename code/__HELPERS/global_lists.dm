@@ -34,6 +34,8 @@
 
 	init_subtypes(/datum/alch_cauldron_recipe, GLOB.alch_cauldron_recipes)
 
+	init_subtypes(/datum/distiller_recipe, GLOB.distiller_recipes)
+
 	init_subtypes(/datum/stew_recipe, GLOB.stew_recipes)
 
 	for(var/i in 0 to 20)

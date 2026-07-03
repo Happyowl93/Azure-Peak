@@ -25,18 +25,22 @@
 
 /obj/item/alch/Initialize()
 	. = ..()
+	// A pot pointer may name either a cauldron or a distiller recipe, so look up both registries.
 	if(!isnull(major_pot))
-		var/datum/alch_cauldron_recipe/rec = locate(major_pot) in GLOB.alch_cauldron_recipes
-		major_smell = rec.smells_like
-		major_name = rec.name
+		var/list/hint = alchemy_recipe_hint(major_pot)
+		if(hint)
+			major_smell = hint["smell"]
+			major_name = hint["name"]
 	if(!isnull(med_pot))
-		var/datum/alch_cauldron_recipe/rec = locate(med_pot) in GLOB.alch_cauldron_recipes
-		med_smell = rec.smells_like
-		med_name = rec.name
+		var/list/hint = alchemy_recipe_hint(med_pot)
+		if(hint)
+			med_smell = hint["smell"]
+			med_name = hint["name"]
 	if(!isnull(minor_pot))
-		var/datum/alch_cauldron_recipe/rec = locate(minor_pot) in GLOB.alch_cauldron_recipes
-		minor_smell = rec.smells_like
-		minor_name = rec.name
+		var/list/hint = alchemy_recipe_hint(minor_pot)
+		if(hint)
+			minor_smell = hint["smell"]
+			minor_name = hint["name"]
 
 /obj/item/alch/examine(mob/user)
 	. = ..()
@@ -67,7 +71,7 @@
 	name = "viscera"
 	desc = "Butchered entrails. Quite useful for alchemy, if a little unappealing to handle."
 	icon_state = "viscera"
-	major_pot = /datum/alch_cauldron_recipe/big_health_potion
+	major_pot = /datum/distiller_recipe/big_health_potion
 	med_pot = /datum/alch_cauldron_recipe/health_potion
 	minor_pot = /datum/alch_cauldron_recipe/antidote
 
@@ -75,7 +79,7 @@
 	name = "sleeping powder"
 	icon_state = "zizodust"
 	major_pot = /datum/alch_cauldron_recipe/sleeping_poison
-	med_pot = /datum/alch_cauldron_recipe/lck_potion
+	med_pot = /datum/distiller_recipe/lck_potion
 	minor_pot = /datum/alch_cauldron_recipe/mana_potion
 
 /obj/item/alch/briar_essence
@@ -83,7 +87,7 @@
 	icon_state = "redpowder"
 	major_pot = /datum/alch_cauldron_recipe/sleeping_poison
 	med_pot = /datum/alch_cauldron_recipe/antidote
-	minor_pot = /datum/alch_cauldron_recipe/lck_potion
+	minor_pot = /datum/distiller_recipe/lck_potion
 
 /obj/item/alch/viscera/get_mechanics_examine(mob/user)
 	. = ..()
@@ -93,23 +97,23 @@
 	name = "water essentia"
 	icon_state = "water_runedust"
 	sellprice = 2
-	major_pot = /datum/alch_cauldron_recipe/int_potion
-	med_pot = /datum/alch_cauldron_recipe/big_mana_potion
-	minor_pot = /datum/alch_cauldron_recipe/per_potion
+	major_pot = /datum/distiller_recipe/int_potion
+	med_pot = /datum/distiller_recipe/big_mana_potion
+	minor_pot = /datum/distiller_recipe/per_potion
 
 /obj/item/alch/bonemeal
 	name = "bone meal"
 	icon_state = "bonemeal"
 	sellprice = 2
 	major_pot = /datum/alch_cauldron_recipe/mana_potion
-	med_pot = /datum/alch_cauldron_recipe/per_potion
+	med_pot = /datum/distiller_recipe/per_potion
 	minor_pot = /datum/alch_cauldron_recipe/antidote
 
 /obj/item/alch/seeddust
 	name = "seed dust"
 	icon_state = "seeddust"
 	sellprice = 2
-	major_pot = /datum/alch_cauldron_recipe/big_stamina_potion
+	major_pot = /datum/distiller_recipe/big_stamina_potion
 	med_pot = /datum/alch_cauldron_recipe/stamina_potion
 	minor_pot = /datum/alch_cauldron_recipe/strong_antidote
 
@@ -117,40 +121,40 @@
 	name = "raw essentia"
 	icon_state = "runedust"
 	sellprice = SELLPRICE_ARCANE_DUST_MID
-	major_pot = /datum/alch_cauldron_recipe/int_potion
-	med_pot = /datum/alch_cauldron_recipe/big_mana_potion
-	minor_pot = /datum/alch_cauldron_recipe/per_potion
+	major_pot = /datum/distiller_recipe/int_potion
+	med_pot = /datum/distiller_recipe/big_mana_potion
+	minor_pot = /datum/distiller_recipe/per_potion
 
 /obj/item/alch/coaldust
 	name = "coal dust"
 	icon_state = "coaldust"
 	sellprice = 1
 	major_pot = /datum/alch_cauldron_recipe/antidote
-	med_pot = /datum/alch_cauldron_recipe/end_potion
-	minor_pot = /datum/alch_cauldron_recipe/str_potion
+	med_pot = /datum/distiller_recipe/end_potion
+	minor_pot = /datum/distiller_recipe/str_potion
 
 /obj/item/alch/silverdust
 	name = "silver dust"
 	icon_state = "silverdust"
 	sellprice = 20
 	major_pot = /datum/alch_cauldron_recipe/strong_antidote
-	med_pot = /datum/alch_cauldron_recipe/restoration_potion
-	minor_pot = /datum/alch_cauldron_recipe/big_health_potion
+	med_pot = /datum/distiller_recipe/restoration_potion
+	minor_pot = /datum/distiller_recipe/big_health_potion
 
 /obj/item/alch/magicdust
 	name = "pure essentia"
 	icon_state = "magic_runedust"
 	sellprice = SELLPRICE_ARCANE_DUST_HIGH
-	major_pot = /datum/alch_cauldron_recipe/big_mana_potion
-	med_pot = /datum/alch_cauldron_recipe/end_potion
-	minor_pot = /datum/alch_cauldron_recipe/con_potion
+	major_pot = /datum/distiller_recipe/big_mana_potion
+	med_pot = /datum/distiller_recipe/end_potion
+	minor_pot = /datum/distiller_recipe/con_potion
 
 /obj/item/alch/firedust
 	name = "fire essentia"
 	icon_state = "fire_runedust"
 	sellprice = SELLPRICE_ARCANE_DUST_LOW
-	major_pot = /datum/alch_cauldron_recipe/str_potion
-	med_pot = /datum/alch_cauldron_recipe/con_potion
+	major_pot = /datum/distiller_recipe/str_potion
+	med_pot = /datum/distiller_recipe/con_potion
 	minor_pot = /datum/alch_cauldron_recipe/fire_potion
 
 /obj/item/alch/sinew
@@ -160,7 +164,7 @@
 	sellprice = SELLPRICE_SINEW
 	dropshrink = 0.9
 	major_pot = /datum/alch_cauldron_recipe/stam_poison
-	med_pot = /datum/alch_cauldron_recipe/end_potion
+	med_pot = /datum/distiller_recipe/end_potion
 	minor_pot = /datum/alch_cauldron_recipe/health_potion
 
 /obj/item/alch/sinew/get_mechanics_examine(mob/user)
@@ -171,41 +175,41 @@
 	name = "iron dust"
 	icon_state = "irondust"
 	sellprice = 3
-	major_pot = /datum/alch_cauldron_recipe/end_potion
-	med_pot = /datum/alch_cauldron_recipe/con_potion
-	minor_pot = /datum/alch_cauldron_recipe/str_potion
+	major_pot = /datum/distiller_recipe/end_potion
+	med_pot = /datum/distiller_recipe/con_potion
+	minor_pot = /datum/distiller_recipe/str_potion
 
 /obj/item/alch/airdust
 	name = "air essentia"
 	icon_state = "air_runedust"
 	sellprice = SELLPRICE_ARCANE_DUST_LOW
-	major_pot = /datum/alch_cauldron_recipe/spd_potion
+	major_pot = /datum/distiller_recipe/spd_potion
 	med_pot = /datum/alch_cauldron_recipe/stamina_potion
-	minor_pot = /datum/alch_cauldron_recipe/int_potion
+	minor_pot = /datum/distiller_recipe/int_potion
 
 /obj/item/alch/swampdust
 	name = "swampweed dust"
 	icon_state = "swampdust"
 	sellprice = 3
 	major_pot = /datum/alch_cauldron_recipe/berrypoison
-	med_pot = /datum/alch_cauldron_recipe/big_stam_poison
-	minor_pot = /datum/alch_cauldron_recipe/end_potion
+	med_pot = /datum/distiller_recipe/big_stam_poison
+	minor_pot = /datum/distiller_recipe/end_potion
 
 /obj/item/alch/tobaccodust
 	name = "westleach dust"
 	icon_state = "tobaccodust"
 	sellprice = 4
-	major_pot = /datum/alch_cauldron_recipe/per_potion
+	major_pot = /datum/distiller_recipe/per_potion
 	med_pot = /datum/alch_cauldron_recipe/stamina_potion
-	minor_pot = /datum/alch_cauldron_recipe/spd_potion
+	minor_pot = /datum/distiller_recipe/spd_potion
 
 /obj/item/alch/earthdust
 	name = "earth essentia"
 	icon_state = "earth_runedust"
 	sellprice = 1
-	major_pot = /datum/alch_cauldron_recipe/con_potion
-	med_pot = /datum/alch_cauldron_recipe/end_potion
-	minor_pot = /datum/alch_cauldron_recipe/str_potion
+	major_pot = /datum/distiller_recipe/con_potion
+	med_pot = /datum/distiller_recipe/end_potion
+	minor_pot = /datum/distiller_recipe/str_potion
 
 /obj/item/alch/bone
 	name = "tail bone"
@@ -220,7 +224,7 @@
 
 	major_pot = /datum/alch_cauldron_recipe/strong_antidote
 	med_pot = /datum/alch_cauldron_recipe/health_potion
-	minor_pot = /datum/alch_cauldron_recipe/con_potion
+	minor_pot = /datum/distiller_recipe/con_potion
 
 /obj/item/alch/bone/get_mechanics_examine(mob/user)
 	. = ..()
@@ -237,9 +241,9 @@
 	grid_width = 64
 	grid_height = 64
 
-	major_pot = /datum/alch_cauldron_recipe/str_potion
-	med_pot = /datum/alch_cauldron_recipe/con_potion
-	minor_pot = /datum/alch_cauldron_recipe/end_potion
+	major_pot = /datum/distiller_recipe/str_potion
+	med_pot = /datum/distiller_recipe/con_potion
+	minor_pot = /datum/distiller_recipe/end_potion
 
 /obj/item/alch/horn/get_mechanics_examine(mob/user)
 	. = ..()
@@ -250,17 +254,17 @@
 	icon_state = "golddust"
 	sellprice = 15
 
-	major_pot = /datum/alch_cauldron_recipe/big_mana_potion
-	med_pot = /datum/alch_cauldron_recipe/restoration_potion
-	minor_pot = /datum/alch_cauldron_recipe/per_potion
+	major_pot = /datum/distiller_recipe/big_mana_potion
+	med_pot = /datum/distiller_recipe/restoration_potion
+	minor_pot = /datum/distiller_recipe/per_potion
 
 /obj/item/alch/feaudust
 	name = "feau dust"
 	icon_state = "feaudust"
 	sellprice = SELLPRICE_ARCANE_DUST_MID
 
-	major_pot = /datum/alch_cauldron_recipe/spd_potion
-	med_pot = /datum/alch_cauldron_recipe/big_mana_potion
+	major_pot = /datum/distiller_recipe/spd_potion
+	med_pot = /datum/distiller_recipe/big_mana_potion
 	minor_pot = /datum/alch_cauldron_recipe/strong_antidote
 
 /obj/item/alch/ozium
@@ -269,9 +273,9 @@
 	icon_state = "darkredpowder"
 	sellprice = 8
 
-	major_pot = /datum/alch_cauldron_recipe/big_stamina_potion
-	med_pot = /datum/alch_cauldron_recipe/lck_potion
-	minor_pot = /datum/alch_cauldron_recipe/int_potion
+	major_pot = /datum/distiller_recipe/big_stamina_potion
+	med_pot = /datum/distiller_recipe/lck_potion
+	minor_pot = /datum/distiller_recipe/int_potion
 
 /obj/item/alch/transisdust
 	name = "sui dust"
@@ -312,7 +316,7 @@
 
 	major_pot = /datum/alch_cauldron_recipe/antidote
 	med_pot = /datum/alch_cauldron_recipe/strong_antidote
-	minor_pot = /datum/alch_cauldron_recipe/big_mana_potion
+	minor_pot = /datum/distiller_recipe/big_mana_potion
 
 /obj/item/alch/mineraldust
 	name = "mineral dusts"
@@ -320,9 +324,9 @@
 	icon_state = "mineraldust"
 	sellprice = 1
 
-	major_pot = /datum/alch_cauldron_recipe/doompoison
-	med_pot = /datum/alch_cauldron_recipe/big_mana_potion
-	minor_pot = /datum/alch_cauldron_recipe/big_stam_poison
+	major_pot = /datum/distiller_recipe/doompoison
+	med_pot = /datum/distiller_recipe/big_mana_potion
+	minor_pot = /datum/distiller_recipe/big_stam_poison
 
 /obj/item/alch/infernaldust
 	name = "infernal dust"
@@ -331,8 +335,8 @@
 	sellprice = SELLPRICE_ARCANE_DUST_HIGH
 
 	major_pot = /datum/alch_cauldron_recipe/fire_potion
-	med_pot = /datum/alch_cauldron_recipe/big_stam_poison
-	minor_pot = /datum/alch_cauldron_recipe/int_potion
+	med_pot = /datum/distiller_recipe/big_stam_poison
+	minor_pot = /datum/distiller_recipe/int_potion
 
 /obj/item/alch/solardust
 	name = "solar dust"
@@ -341,8 +345,8 @@
 	sellprice = SELLPRICE_ARCANE_DUST_MID
 
 	major_pot = /datum/alch_cauldron_recipe/fire_potion
-	med_pot = /datum/alch_cauldron_recipe/int_potion
-	minor_pot = /datum/alch_cauldron_recipe/per_potion
+	med_pot = /datum/distiller_recipe/int_potion
+	minor_pot = /datum/distiller_recipe/per_potion
 
 /obj/item/alch/berrypowder
 	name = "berry powder"
@@ -353,7 +357,7 @@
 
 	major_pot = /datum/alch_cauldron_recipe/berrypoison
 	med_pot = /datum/alch_cauldron_recipe/mana_potion
-	minor_pot = /datum/alch_cauldron_recipe/big_mana_potion
+	minor_pot = /datum/distiller_recipe/big_mana_potion
 
 //BEGIN THE HERBS
 
@@ -362,7 +366,7 @@
 	icon_state = "atropa"
 	sellprice = SELLPRICE_HERB_RARE
 
-	major_pot = /datum/alch_cauldron_recipe/doompoison
+	major_pot = /datum/distiller_recipe/doompoison
 	med_pot = /datum/alch_cauldron_recipe/berrypoison
 	minor_pot = /datum/alch_cauldron_recipe/stam_poison
 
@@ -377,8 +381,8 @@
 	alternate_worn_layer  = 8.9 //On top of helmet
 
 	major_pot = /datum/alch_cauldron_recipe/berrypoison
-	med_pot = /datum/alch_cauldron_recipe/per_potion
-	minor_pot = /datum/alch_cauldron_recipe/doompoison
+	med_pot = /datum/distiller_recipe/per_potion
+	minor_pot = /datum/distiller_recipe/doompoison
 
 /obj/item/alch/symphitum
 	name = "symphitum"
@@ -403,16 +407,16 @@
 	icon_state = "euphrasia"
 	sellprice = SELLPRICE_HERB_UNCOMMON
 
-	major_pot = /datum/alch_cauldron_recipe/spd_potion
+	major_pot = /datum/distiller_recipe/spd_potion
 	med_pot = /datum/alch_cauldron_recipe/stam_poison
-	minor_pot = /datum/alch_cauldron_recipe/int_potion
+	minor_pot = /datum/distiller_recipe/int_potion
 
 /obj/item/alch/paris
 	name = "paris"
 	icon_state = "paris"
 	sellprice = SELLPRICE_HERB_UNCOMMON
 
-	major_pot = /datum/alch_cauldron_recipe/big_stam_poison
+	major_pot = /datum/distiller_recipe/big_stam_poison
 	med_pot = /datum/alch_cauldron_recipe/berrypoison
 	minor_pot = /datum/alch_cauldron_recipe/stam_poison
 
@@ -425,8 +429,8 @@
 	w_class = WEIGHT_CLASS_TINY
 	alternate_worn_layer  = 8.9 //On top of helmet
 
-	major_pot = /datum/alch_cauldron_recipe/big_health_potion
-	med_pot = /datum/alch_cauldron_recipe/end_potion
+	major_pot = /datum/distiller_recipe/big_health_potion
+	med_pot = /datum/distiller_recipe/end_potion
 	minor_pot = /datum/alch_cauldron_recipe/health_potion
 
 /obj/item/alch/calendula/Initialize()
@@ -445,8 +449,8 @@
 	icon_state = "mentha"
 	sellprice = SELLPRICE_HERB_COMMON
 
-	major_pot = /datum/alch_cauldron_recipe/per_potion
-	med_pot = /datum/alch_cauldron_recipe/int_potion
+	major_pot = /datum/distiller_recipe/per_potion
+	med_pot = /datum/distiller_recipe/int_potion
 	minor_pot = /datum/alch_cauldron_recipe/stamina_potion
 
 /obj/item/alch/mentha/Initialize()
@@ -467,7 +471,7 @@
 	sellprice = SELLPRICE_HERB_COMMON
 
 	major_pot = /datum/alch_cauldron_recipe/health_potion
-	med_pot = /datum/alch_cauldron_recipe/spd_potion
+	med_pot = /datum/distiller_recipe/spd_potion
 	minor_pot = /datum/alch_cauldron_recipe/stamina_potion
 
 /obj/item/alch/salvia
@@ -480,9 +484,9 @@
 	w_class = WEIGHT_CLASS_TINY
 	alternate_worn_layer  = 8.9 //On top of helmet
 
-	major_pot = /datum/alch_cauldron_recipe/con_potion
-	med_pot = /datum/alch_cauldron_recipe/str_potion
-	minor_pot = /datum/alch_cauldron_recipe/end_potion
+	major_pot = /datum/distiller_recipe/con_potion
+	med_pot = /datum/distiller_recipe/str_potion
+	minor_pot = /datum/distiller_recipe/end_potion
 
 /obj/item/alch/salvia/Initialize()
 	. = ..()
@@ -502,7 +506,7 @@
 	sellprice = SELLPRICE_HERB_COMMON
 
 	major_pot = /datum/alch_cauldron_recipe/stamina_potion
-	med_pot = /datum/alch_cauldron_recipe/big_mana_potion
+	med_pot = /datum/distiller_recipe/big_mana_potion
 	minor_pot = /datum/alch_cauldron_recipe/antidote
 
 /obj/item/alch/hypericum/Initialize()
@@ -521,9 +525,9 @@
 	icon_state = "benedictus"
 	sellprice = SELLPRICE_HERB_UNCOMMON
 
-	major_pot = /datum/alch_cauldron_recipe/big_stamina_potion
+	major_pot = /datum/distiller_recipe/big_stamina_potion
 	med_pot = /datum/alch_cauldron_recipe/stamina_potion
-	minor_pot = /datum/alch_cauldron_recipe/int_potion
+	minor_pot = /datum/distiller_recipe/int_potion
 
 /obj/item/alch/valeriana
 	name = "valeriana"
@@ -531,7 +535,7 @@
 	sellprice = SELLPRICE_HERB_COMMON
 
 	major_pot = /datum/alch_cauldron_recipe/health_potion
-	med_pot = /datum/alch_cauldron_recipe/spd_potion
+	med_pot = /datum/distiller_recipe/spd_potion
 	minor_pot = /datum/alch_cauldron_recipe/stam_poison
 
 /obj/item/alch/valeriana/Initialize()
@@ -550,8 +554,8 @@
 	icon_state = "artemisia"
 	sellprice = SELLPRICE_HERB_COMMON
 
-	major_pot = /datum/alch_cauldron_recipe/lck_potion
-	med_pot = /datum/alch_cauldron_recipe/spd_potion
+	major_pot = /datum/distiller_recipe/lck_potion
+	med_pot = /datum/distiller_recipe/spd_potion
 	minor_pot = /datum/alch_cauldron_recipe/health_potion
 
 /obj/item/alch/manabloompowder
@@ -560,8 +564,8 @@
 	sellprice = SELLPRICE_ARCANE_DUST_HIGH
 
 	major_pot = /datum/alch_cauldron_recipe/mana_potion
-	med_pot = /datum/alch_cauldron_recipe/int_potion
-	minor_pot = /datum/alch_cauldron_recipe/big_mana_potion
+	med_pot = /datum/distiller_recipe/int_potion
+	minor_pot = /datum/distiller_recipe/big_mana_potion
 
 /obj/item/alch/rosa
 	name = "rosa"
@@ -578,9 +582,9 @@
 	muteinmouth = FALSE
 	alternate_worn_layer  = 8.9 //On top of helmet
 	mill_result = /obj/item/reagent_containers/food/snacks/grown/rogue/rosa_petals
-	major_pot = /datum/alch_cauldron_recipe/lck_potion
+	major_pot = /datum/distiller_recipe/lck_potion
 	med_pot = /datum/alch_cauldron_recipe/antidote
-	minor_pot = /datum/alch_cauldron_recipe/restoration_potion
+	minor_pot = /datum/distiller_recipe/restoration_potion
 
 /obj/item/alch/rosa/equipped(mob/living/carbon/human/user, slot)
 	. = ..()
