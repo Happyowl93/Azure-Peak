@@ -1421,7 +1421,7 @@
 	name = "alchemy distiller"
 	category = "Misc"
 	result = /obj/machinery/light/rogue/distiller
-	reqs = list(/obj/item/ingot/iron = 1,/obj/item/ingot/copper = 1, /obj/item/reagent_containers/glass/bottle = 1)
+	reqs = list(/obj/item/reagent_containers/glass/bucket/pot/copper = 1, /obj/item/ingot/iron = 1, /obj/item/grown/log/tree/small = 1)
 	verbage_simple = "assemble"
 	verbage = "assembles"
 	skillcraft = /datum/skill/craft/alchemy
