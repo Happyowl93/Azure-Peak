@@ -24,6 +24,9 @@
 	/// Units of output per point of ingredient score. Max score is 18 (6 ingredients × 3),
 	/// so strong potions use 15 (18 × 15 = 270u). Stat potions override to 7.5 (half).
 	var/potency_per_score = 15
+	/// Ingredients that build toward this recipe: ingredient type => score weight (3/2/1).
+	/// An ingredient may feed any number of recipes.
+	var/list/ingredient_scores = list()
 
 /datum/distiller_recipe/proc/generate_html(mob/user)
 	var/client/client = user
@@ -91,3 +94,42 @@
 	if(drec)
 		return list("smell" = drec.smells_like, "name" = drec.name)
 	return null
+
+/// Build [GLOB.alch_ingredient_recipes] by inverting every recipe's ingredient_scores into
+/// ingredient type => list(recipe = weight). Run after both recipe registries are populated.
+/proc/build_alch_ingredient_index()
+	var/list/index = list()
+	for(var/datum/alch_cauldron_recipe/crec as anything in GLOB.alch_cauldron_recipes)
+		for(var/ing_type in crec.ingredient_scores)
+			var/list/entry = index[ing_type]
+			if(!entry)
+				entry = list()
+				index[ing_type] = entry
+			entry[crec] = crec.ingredient_scores[ing_type]
+	for(var/datum/distiller_recipe/drec as anything in GLOB.distiller_recipes)
+		for(var/ing_type in drec.ingredient_scores)
+			var/list/entry = index[ing_type]
+			if(!entry)
+				entry = list()
+				index[ing_type] = entry
+			entry[drec] = drec.ingredient_scores[ing_type]
+	// Sort each ingredient's recipes strongest-first so examine hints list in weight order.
+	for(var/ing_type in index)
+		index[ing_type] = sortTim(index[ing_type], cmp = /proc/cmp_numeric_dsc, associative = TRUE)
+	GLOB.alch_ingredient_recipes = index
+
+/// Score loaded ingredients against every recipe they feed. Returns recipe => total score,
+/// sorted highest-first; duplicates stack. Callers take outcomes[1] and gate on score >= 5.
+/proc/score_alch_ingredients(list/ingredients)
+	var/list/outcomes = list()
+	for(var/obj/item/alch/alching in ingredients)
+		var/list/recipes = GLOB.alch_ingredient_recipes[alching.type]
+		if(!recipes)
+			continue
+		for(var/datum/recipe as anything in recipes)
+			if(outcomes[recipe])
+				outcomes[recipe] += recipes[recipe]
+			else
+				outcomes[recipe] = recipes[recipe]
+	sortTim(outcomes, cmp = /proc/cmp_numeric_dsc, associative = TRUE)
+	return outcomes

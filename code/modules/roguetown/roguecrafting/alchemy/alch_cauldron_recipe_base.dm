@@ -6,6 +6,9 @@
 	var/skill_required = SKILL_LEVEL_APPRENTICE // Minimum skill to create this recipe successfully (It just won't mix otherwise) - Minimum Apprentice
 	var/list/output_reagents = list() //list of paths of new reagents to create in the cauldron. Remember, 1 oz is 3 units! [reagent = amnt]
 	var/list/output_items = list() //List of paths for new items that should be created, [path = chance to be created]
+	/// Ingredients that build toward this recipe: ingredient type => score weight (3/2/1).
+	/// An ingredient may feed any number of recipes.
+	var/list/ingredient_scores = list()
 
 /datum/alch_cauldron_recipe/proc/generate_html(mob/user)
 	var/client/client = user

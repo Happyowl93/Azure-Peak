@@ -366,30 +366,15 @@
 				src.visible_message(span_info("[src] bubbles softly, beginning to mix the ingredients into a potion..."))
 			brewing++
 		else if(brewing)
-			var/list/outcomes = list()
-			for(var/obj/item/ing in src.ingredients)
-				if(!istype(ing,/obj/item/alch))
-					continue
-				var/obj/item/alch/alching = ing
-				if(alching.major_pot != null)
-					if(outcomes[alching.major_pot] != null)
-						outcomes[alching.major_pot] += 3
-					else
-						outcomes[alching.major_pot] = 3
-				if(alching.med_pot != null)
-					if(outcomes[alching.med_pot] != null)
-						outcomes[alching.med_pot] += 2
-					else
-						outcomes[alching.med_pot] = 2
-				if(alching.minor_pot != null)
-					if(outcomes[alching.minor_pot] != null)
-						outcomes[alching.minor_pot] += 1
-					else
-						outcomes[alching.minor_pot] = 1
-			sortTim(outcomes,cmp=/proc/cmp_numeric_dsc,associative = 1)
-			if(outcomes[outcomes[1]] >= 5)
-				var/result_path = outcomes[1]
-				var/datum/alch_cauldron_recipe/found_recipe = new result_path
+			var/list/outcomes = score_alch_ingredients(ingredients)
+			if(outcomes.len && outcomes[outcomes[1]] >= 5)
+				var/datum/winning = outcomes[1]
+				// Distiller-only recipes are too refined to brew this way.
+				if(istype(winning, /datum/distiller_recipe))
+					brewing = 0
+					src.visible_message(span_warning("[src] gurgles unhappily - these reagents are too refined to brew this way."))
+					return
+				var/datum/alch_cauldron_recipe/found_recipe = winning
 				var/amt2raise = familiar_summoner?.STAINT*2
 				// Handle skillgating
 				if(!familiar_summoner)
@@ -422,7 +407,6 @@
 				playsound(src,'sound/misc/smelter_fin.ogg', 30, FALSE)
 				ingredients = list()
 				brewing = 0
-				qdel(found_recipe)
 			else
 				brewing = 0
 				src.visible_message("<span class='info'>[src] emits an unpleasant gurgle, the ingredients failing to meld together at all...</span>")

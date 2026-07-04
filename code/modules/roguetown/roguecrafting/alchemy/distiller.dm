@@ -126,33 +126,6 @@
 	. += span_info("Right-click the distiller with a glass vessel in hand to slot it under the spout. Once distilling begins the elixir drips into it slowly; you can remove and swap vessels mid-batch by left-clicking the machine. Overflow is wasted.")
 	. += span_info("Loading more ingredients that smell of the target potion scales the yield.")
 
-/// Tally the smell-points of the inserted ingredients, exactly like the cauldron.
-/// Returns an associative list of recipe path = points, sorted descending (paths may be
-/// cauldron or distiller recipes; the distiller only acts on the latter).
-/obj/machinery/light/rogue/distiller/proc/score_ingredients()
-	var/list/outcomes = list()
-	for(var/obj/item/ing in ingredients)
-		if(!istype(ing, /obj/item/alch))
-			continue
-		var/obj/item/alch/alching = ing
-		if(alching.major_pot != null)
-			if(outcomes[alching.major_pot] != null)
-				outcomes[alching.major_pot] += 3
-			else
-				outcomes[alching.major_pot] = 3
-		if(alching.med_pot != null)
-			if(outcomes[alching.med_pot] != null)
-				outcomes[alching.med_pot] += 2
-			else
-				outcomes[alching.med_pot] = 2
-		if(alching.minor_pot != null)
-			if(outcomes[alching.minor_pot] != null)
-				outcomes[alching.minor_pot] += 1
-			else
-				outcomes[alching.minor_pot] = 1
-	sortTim(outcomes, cmp=/proc/cmp_numeric_dsc, associative = 1)
-	return outcomes
-
 /obj/machinery/light/rogue/distiller/process()
 	..()
 	if(!on)
@@ -176,7 +149,7 @@
 /// Validate the loaded ingredients/base/catalyst once heat-up finishes, and if they make a
 /// valid recipe, commit the reaction so it can drip into the vessel over the coming ticks.
 /obj/machinery/light/rogue/distiller/proc/try_begin_distillation()
-	var/list/outcomes = score_ingredients()
+	var/list/outcomes = score_alch_ingredients(ingredients)
 	if(!outcomes.len || outcomes[outcomes[1]] < 5)
 		distilling = 0
 		visible_message(span_info("The mixture in [src] fails to bind together at all..."))
@@ -186,9 +159,9 @@
 			qdel(ing)
 		ingredients = list()
 		return
-	var/winning_path = outcomes[1]
-	var/winning_score = outcomes[winning_path]
-	if(!ispath(winning_path, /datum/distiller_recipe))
+	var/datum/winning = outcomes[1]
+	var/winning_score = outcomes[winning]
+	if(!istype(winning, /datum/distiller_recipe))
 		distilling = 0
 		visible_message(span_info("These ingredients would brew fine in a cauldron - the distiller does nothing with them."))
 		playsound(src, 'sound/misc/smelter_fin.ogg', 30, FALSE)
@@ -197,10 +170,7 @@
 			qdel(ing)
 		ingredients = list()
 		return
-	var/datum/distiller_recipe/recipe = locate(winning_path) in GLOB.distiller_recipes
-	if(!recipe)
-		distilling = 0
-		return
+	var/datum/distiller_recipe/recipe = winning
 	if(!lastuser)
 		distilling = 0
 		visible_message(span_info("The distiller can't refine anything without an alchemist to guide it."))

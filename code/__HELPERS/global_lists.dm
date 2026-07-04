@@ -36,6 +36,8 @@
 
 	init_subtypes(/datum/distiller_recipe, GLOB.distiller_recipes)
 
+	build_alch_ingredient_index() // invert recipe ingredient_scores into GLOB.alch_ingredient_recipes
+
 	init_subtypes(/datum/stew_recipe, GLOB.stew_recipes)
 
 	for(var/i in 0 to 20)
