@@ -10760,6 +10760,7 @@
 	dir = 9;
 	pixel_x = 4
 	},
+/obj/machinery/light/rogue/alembic,
 /turf/open/floor/rogue/cobble/mossy,
 /area/rogue/indoors/vampire_manor)
 "TY" = (
