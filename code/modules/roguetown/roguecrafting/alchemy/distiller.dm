@@ -123,9 +123,9 @@
 
 /obj/machinery/light/rogue/distiller/get_mechanics_examine(mob/user)
 	. = ..()
-	. += span_info("Pour a finished basic potion into the distiller with a container on the 'FEED' intent, the way you would fill a cauldron with water.")
-	. += span_info("Then add ingredients that smell of the potion you wish to refine, and place a pinch of gold dust inside to act as a catalyst - it is not consumed.")
-	. += span_info("Right-click the distiller with a glass vessel in hand to slot it under the spout. Once distilling begins the elixir drips into it slowly; you can remove and swap vessels mid-batch by left-clicking the machine. Overflow is wasted.")
+	. += span_info("Pour a base reagent into the distiller, the way you would fill a cauldron with water.")
+	. += span_info("Then add ingredients that smell of the potion you wish to refine, and place a catalyst in the appropiate tray; it is not consumed.")
+	. += span_info("Right-click the distiller with a glass vessel in hand to slot it under the spout. Once distilling begins the elixir drips into it slowly; you can remove and swap vessels mid-batch right clicking the machine with another container in your hand. Overflow is wasted.")
 	. += span_info("Loading more ingredients that smell of the target potion scales the yield.")
 
 /obj/machinery/light/rogue/distiller/process()
@@ -343,19 +343,22 @@
 	..()
 
 /obj/machinery/light/rogue/distiller/attack_right(mob/user)
-	// Right-click with a glass vessel in hand to slot it as the output container,
-	// so players don't have to "strike" the machine with it on the default intent.
+	// Right-click with a glass vessel in hand to fit it under the spout.
 	var/obj/item/I = user.get_active_held_item()
 	if(istype(I, /obj/item/reagent_containers/glass))
-		if(output_container)
-			to_chat(user, span_warning("There is already a vessel fitted to [src]."))
-			return FALSE
 		if(!user.transferItemToLoc(I, src))
 			to_chat(user, span_warning("[I] is stuck to my hand!"))
 			return FALSE
+		var/obj/item/reagent_containers/glass/previous = output_container
 		output_container = I
 		lastuser = user
-		to_chat(user, span_info("I fit [I] to [src] to catch the elixir."))
+		if(previous)
+			previous.loc = user.loc
+			user.put_in_active_hand(previous)
+			overflow_warned = FALSE // Fresh vessel - re-enable the overflow warning.
+			to_chat(user, span_info("I swap [previous] out for [I] under [src]'s spout."))
+		else
+			to_chat(user, span_info("I fit [I] to [src] to catch the elixir."))
 		update_icon()
 		return TRUE
 	return ..()
