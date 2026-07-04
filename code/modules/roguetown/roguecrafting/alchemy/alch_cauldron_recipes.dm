@@ -1,8 +1,6 @@
-// Basic alchemy - brewed in a cauldron.
-// The advanced tier (strong potions, stat potions, and the two expert poisons) lives in
-// distiller_recipes.dm as /datum/distiller_recipe and can only be made in a distiller.
+// Cauldron recipes (machines = MACHINE_CAULDRON, via the /cauldron parent).
 
-/datum/alch_cauldron_recipe/antidote
+/datum/alch_recipe/cauldron/antidote
 	name = "Antidote"
 	smells_like = "wet moss"
 	output_reagents = list(/datum/reagent/medicine/antidote = 90)
@@ -19,7 +17,7 @@
 		/obj/item/alch/viscera = 1,
 	)
 
-/datum/alch_cauldron_recipe/strong_antidote
+/datum/alch_recipe/cauldron/strong_antidote
 	name = "Antidote (Strong)"
 	smells_like = "purity"
 	output_reagents = list(/datum/reagent/medicine/strong_antidote = 90)
@@ -31,7 +29,7 @@
 		/obj/item/alch/seeddust = 1,
 	)
 
-/datum/alch_cauldron_recipe/berrypoison
+/datum/alch_recipe/cauldron/berrypoison
 	name = "Poison (Berry)"
 	smells_like = "death"
 	skill_required = SKILL_LEVEL_JOURNEYMAN // Basic poison should be harder to handle
@@ -44,7 +42,7 @@
 		/obj/item/alch/paris = 2,
 	)
 
-/datum/alch_cauldron_recipe/stam_poison
+/datum/alch_recipe/cauldron/stam_poison
 	name = "Stamina Poison"
 	smells_like = "a slow breeze"
 	skill_required = SKILL_LEVEL_JOURNEYMAN // Basic poison should be harder to handle
@@ -59,7 +57,7 @@
 		/obj/item/alch/valeriana = 1,
 	)
 
-/datum/alch_cauldron_recipe/sleeping_poison
+/datum/alch_recipe/cauldron/sleeping_poison
 	name = "Sleep Poison"
 	smells_like = "numbing mint"
 	skill_required = SKILL_LEVEL_MASTER // Fairly potent, let's lock it behind high alchemy skill.
@@ -70,7 +68,8 @@
 	)
 
 //Healing potions
-/datum/alch_cauldron_recipe/health_potion
+/datum/alch_recipe/cauldron/health_potion
+	machines = MACHINE_CAULDRON | MACHINE_DISTILLER
 	name = "Elixir of Health"
 	smells_like = "sweet berries"
 	output_reagents = list(/datum/reagent/medicine/healthpot = 90)
@@ -86,7 +85,8 @@
 		/obj/item/alch/sinew = 1,
 	)
 
-/datum/alch_cauldron_recipe/mana_potion
+/datum/alch_recipe/cauldron/mana_potion
+	machines = MACHINE_CAULDRON | MACHINE_DISTILLER
 	name = "Elixir of Mana"
 	smells_like = "power"
 	output_reagents = list(/datum/reagent/medicine/manapot = 90)
@@ -97,7 +97,8 @@
 		/obj/item/alch/sleep_powder = 1,
 	)
 
-/datum/alch_cauldron_recipe/stamina_potion
+/datum/alch_recipe/cauldron/stamina_potion
+	machines = MACHINE_CAULDRON | MACHINE_DISTILLER
 	name = "Elixir of Stamina"
 	smells_like = "fresh air"
 	output_reagents = list(/datum/reagent/medicine/stampot = 90)
@@ -111,7 +112,7 @@
 		/obj/item/alch/urtica = 1,
 	)
 
-/datum/alch_cauldron_recipe/fire_potion
+/datum/alch_recipe/cauldron/fire_potion
 	name = "Potion of Fire Warding"
 	smells_like = "authority"
 	skill_required = SKILL_LEVEL_MASTER

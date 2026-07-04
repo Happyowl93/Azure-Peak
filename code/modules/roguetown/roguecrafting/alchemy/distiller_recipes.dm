@@ -1,9 +1,9 @@
-// Advanced alchemy - made only in a distiller, never a cauldron.
-// Each recipe lists the ingredients that build toward it in `ingredient_scores` (type => 3/2/1), exactly like basic recipes.
-// Every distiller recipe uses gold dust as its catalyst (inherited from the base type).
+// Distiller-only recipes (machines = MACHINE_DISTILLER, via the /distiller parent). The weak potions
+// that also brew in a cauldron live in alch_cauldron_recipes.dm with both machine bits set.
+// Each recipe lists its ingredients in `ingredient_scores` (type => 3/2/1); gold dust is the catalyst (inherited).
 
 //Strong potions - distilled from their weaker form.
-/datum/distiller_recipe/big_health_potion
+/datum/alch_recipe/distiller/big_health_potion
 	name = "Elixir of Health (Strong)"
 	smells_like = "berry pie"
 	skill_required = SKILL_LEVEL_EXPERT
@@ -15,7 +15,7 @@
 		/obj/item/alch/silverdust = 1,
 	)
 
-/datum/distiller_recipe/big_mana_potion
+/datum/alch_recipe/distiller/big_mana_potion
 	name = "Elixir of Mana (Strong)"
 	smells_like = "fear"
 	skill_required = SKILL_LEVEL_EXPERT
@@ -34,7 +34,7 @@
 		/obj/item/alch/puresalt = 1,
 	)
 
-/datum/distiller_recipe/big_stamina_potion
+/datum/alch_recipe/distiller/big_stamina_potion
 	name = "Elixir of Stamina (Strong)"
 	smells_like = "clean winds"
 	skill_required = SKILL_LEVEL_EXPERT
@@ -46,7 +46,7 @@
 		/obj/item/alch/seeddust = 3,
 	)
 
-/datum/distiller_recipe/restoration_potion
+/datum/alch_recipe/distiller/restoration_potion
 	name = "Elixir of Restoration"
 	smells_like = "fizzling berries"
 	skill_required = SKILL_LEVEL_EXPERT
@@ -59,7 +59,7 @@
 	)
 
 //Expert poisons - distilled from their weaker form.
-/datum/distiller_recipe/doompoison
+/datum/alch_recipe/distiller/doompoison
 	name = "Poison (Doom)"
 	smells_like = "doom"
 	skill_required = SKILL_LEVEL_EXPERT
@@ -71,7 +71,7 @@
 		/obj/item/alch/matricaria = 1,
 	)
 
-/datum/distiller_recipe/big_stam_poison
+/datum/alch_recipe/distiller/big_stam_poison
 	name = "Stamina Poison (Strong)"
 	smells_like = "stagnant air"
 	skill_required = SKILL_LEVEL_EXPERT
@@ -86,7 +86,7 @@
 
 //Stat potions - distilled from plain water, gated by the catalyst and expert skill.
 // Stat potions are weaker than strong potions, so they output half as much per score.
-/datum/distiller_recipe/str_potion
+/datum/alch_recipe/distiller/str_potion
 	name = "Potion of Mountain Muscles"
 	smells_like = "petrichor"
 	skill_required = SKILL_LEVEL_EXPERT
@@ -101,7 +101,7 @@
 		/obj/item/alch/irondust = 1,
 	)
 
-/datum/distiller_recipe/per_potion
+/datum/alch_recipe/distiller/per_potion
 	name = "Potion of Keen Eye"
 	smells_like = "fire"
 	skill_required = SKILL_LEVEL_EXPERT
@@ -118,7 +118,7 @@
 		/obj/item/alch/waterdust = 1,
 	)
 
-/datum/distiller_recipe/end_potion
+/datum/alch_recipe/distiller/end_potion
 	name = "Potion of Enduring Fortitude"
 	smells_like = "mountain air"
 	skill_required = SKILL_LEVEL_EXPERT
@@ -136,7 +136,7 @@
 		/obj/item/alch/swampdust = 1,
 	)
 
-/datum/distiller_recipe/con_potion
+/datum/alch_recipe/distiller/con_potion
 	name = "Potion of Stone Flesh"
 	smells_like = "earth"
 	skill_required = SKILL_LEVEL_EXPERT
@@ -152,7 +152,7 @@
 		/obj/item/alch/magicdust = 1,
 	)
 
-/datum/distiller_recipe/int_potion
+/datum/alch_recipe/distiller/int_potion
 	name = "Potion of Keen Mind"
 	smells_like = "water"
 	skill_required = SKILL_LEVEL_EXPERT
@@ -171,7 +171,7 @@
 		/obj/item/alch/ozium = 1,
 	)
 
-/datum/distiller_recipe/spd_potion
+/datum/alch_recipe/distiller/spd_potion
 	name = "Potion of Fleet Foot"
 	smells_like = "clean air"
 	skill_required = SKILL_LEVEL_EXPERT
@@ -187,7 +187,7 @@
 		/obj/item/alch/tobaccodust = 1,
 	)
 
-/datum/distiller_recipe/lck_potion
+/datum/alch_recipe/distiller/lck_potion
 	name = "Potion of Seven Clovers"
 	smells_like = "calming"
 	skill_required = SKILL_LEVEL_EXPERT

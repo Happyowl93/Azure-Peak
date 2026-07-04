@@ -367,14 +367,8 @@
 			brewing++
 		else if(brewing)
 			var/list/outcomes = score_alch_ingredients(ingredients)
-			if(outcomes.len && outcomes[outcomes[1]] >= 5)
-				var/datum/winning = outcomes[1]
-				// Distiller-only recipes are too refined to brew this way.
-				if(istype(winning, /datum/distiller_recipe))
-					brewing = 0
-					src.visible_message(span_warning("[src] gurgles unhappily - these reagents are too refined to brew this way."))
-					return
-				var/datum/alch_cauldron_recipe/found_recipe = winning
+			var/datum/alch_recipe/found_recipe = best_alch_recipe(outcomes, MACHINE_CAULDRON)
+			if(found_recipe)
 				var/amt2raise = familiar_summoner?.STAINT*2
 				// Handle skillgating
 				if(!familiar_summoner)

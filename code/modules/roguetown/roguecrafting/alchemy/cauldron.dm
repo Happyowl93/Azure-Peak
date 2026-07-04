@@ -71,14 +71,8 @@
 						playsound(src, "bubbles", 100, FALSE)
 			else if(brewing == 20)
 				var/list/outcomes = score_alch_ingredients(ingredients)
-				if(outcomes.len && outcomes[outcomes[1]] >= 5)
-					var/datum/winning = outcomes[1]
-					// Advanced recipes are /datum/distiller_recipe - a plain cauldron can't make them.
-					if(istype(winning, /datum/distiller_recipe))
-						brewing = 0
-						src.visible_message(span_warning("These reagents are too refined for a mere cauldron - they must be distilled."))
-						return
-					var/datum/alch_cauldron_recipe/found_recipe = winning
+				var/datum/alch_recipe/found_recipe = best_alch_recipe(outcomes, MACHINE_CAULDRON)
+				if(found_recipe)
 					var/amt2raise = lastuser?.STAINT*2
 					var/in_cauldron = src?.reagents?.get_reagent_amount(/datum/reagent/water)
 					// Handle skillgating
@@ -118,7 +112,11 @@
 					brewing = 21
 				else
 					brewing = 0
-					src.visible_message("<span class='info'>The ingredients in the [src] fail to meld together at all...</span>")
+					// Nothing of ours cleared 5; if a distiller-tier recipe did, hint at the distiller.
+					if(outcomes.len && outcomes[outcomes[1]] >= 5)
+						src.visible_message(span_warning("These reagents are too refined for a mere cauldron - they must be distilled."))
+					else
+						src.visible_message("<span class='info'>The ingredients in the [src] fail to meld together at all...</span>")
 					playsound(src,'sound/misc/smelter_fin.ogg', 30, FALSE)
 
 /obj/machinery/light/rogue/cauldron/attackby(obj/item/I, mob/user, params)

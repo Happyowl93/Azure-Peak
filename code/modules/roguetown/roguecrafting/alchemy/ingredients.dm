@@ -24,26 +24,23 @@
 		var/mob/living/lmob = user
 		perint = FLOOR((lmob.STAPER + lmob.STAINT)/2,1)
 	var/legendary = HAS_TRAIT(user, TRAIT_LEGENDARY_ALCHEMIST)
-	for(var/datum/rec as anything in recipes)
-		var/list/hint = alchemy_recipe_hint(rec.type)
-		if(!hint)
-			continue
+	for(var/datum/alch_recipe/rec as anything in recipes)
 		switch(recipes[rec])
 			if(3)
 				if(legendary)
-					. += span_notice(" Strongly attuned to making [hint["name"]].")
+					. += span_notice(" Strongly attuned to making [rec.name].")
 				else if(alch_skill >= SKILL_LEVEL_NOVICE || perint >= 6)
-					. += span_notice(" Smells strongly of [hint["smell"]].")
+					. += span_notice(" Smells strongly of [rec.smells_like].")
 			if(2)
 				if(legendary)
-					. += span_notice(" Moderately attuned to making [hint["name"]].")
+					. += span_notice(" Moderately attuned to making [rec.name].")
 				else if(alch_skill >= SKILL_LEVEL_APPRENTICE || perint >= 10)
-					. += span_notice(" Smells slightly of [hint["smell"]].")
+					. += span_notice(" Smells slightly of [rec.smells_like].")
 			if(1)
 				if(legendary)
-					. += span_notice(" Minorly attuned to making [hint["name"]].")
+					. += span_notice(" Minorly attuned to making [rec.name].")
 				else if(alch_skill >= SKILL_LEVEL_EXPERT || perint >= 16)
-					. += span_notice(" Smells weakly of [hint["smell"]].")
+					. += span_notice(" Smells weakly of [rec.smells_like].")
 
 /obj/item/alch/viscera
 	name = "viscera"

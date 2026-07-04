@@ -21,8 +21,7 @@ GLOBAL_LIST_EMPTY(tech_list)					//list of all /datum/tech datums indexed by id.
 GLOBAL_LIST_EMPTY(crafting_recipes)				//list of all table craft recipes
 GLOBAL_LIST_EMPTY(anvil_recipes)				//list of all table craft recipes
 GLOBAL_LIST_EMPTY(alch_grind_recipes)			//list of all alchemy grinding recipes
-GLOBAL_LIST_EMPTY(alch_cauldron_recipes)		//list of all alchemy cauldron recipes
-GLOBAL_LIST_EMPTY(distiller_recipes)			//list of all advanced alchemy distiller recipes
+GLOBAL_LIST_EMPTY(alch_recipes)					//list of all alchemy recipes (cauldron and/or distiller, per each recipe's machines bitfield)
 GLOBAL_LIST_EMPTY(alch_ingredient_recipes)		//reverse index: ingredient type -> list(recipe = score weight), built from recipe ingredient_scores
 GLOBAL_LIST_EMPTY(cooking_recipes)				//list of all cooking recipes. currently unused, pending a broader crafting refactor.
 GLOBAL_LIST_EMPTY(rcd_list)					//list of Rapid Construction Devices.

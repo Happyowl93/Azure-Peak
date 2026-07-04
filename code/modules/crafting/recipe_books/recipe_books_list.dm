@@ -158,8 +158,7 @@
 		/datum/crafting_recipe/roguetown/structure/distiller,
 		/datum/crafting_recipe/roguetown/alchemy,
 		/datum/alch_grind_recipe,
-		/datum/alch_cauldron_recipe,
-		/datum/distiller_recipe
+		/datum/alch_recipe
 		)
  
 /obj/item/recipe_book/brewing

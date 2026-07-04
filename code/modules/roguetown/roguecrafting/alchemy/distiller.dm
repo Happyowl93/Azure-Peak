@@ -2,7 +2,7 @@
  * The distiller - advanced alchemy.
  *
  * Where the cauldron brews *basic* potions from raw ingredients and water, the
- * distiller makes the advanced tier - the /datum/distiller_recipe potions, which a
+ * distiller makes the advanced tier - the MACHINE_DISTILLER /datum/alch_recipe potions, which a
  * plain cauldron refuses. To run one it needs, all at once:
  * - The recipe's base_reagent poured in as a liquid (water for stat potions, or the
  *   weaker potion for the "strong" variants), in sufficient quantity.
@@ -32,7 +32,7 @@
 	/// Process ticks of heat-up before the first drop forms.
 	var/heatup_ticks = 10
 	/// The recipe currently dripping out. While set, the machine is in its drip phase.
-	var/datum/distiller_recipe/active_recipe
+	var/datum/alch_recipe/active_recipe
 	/// Output reagents still to drip this batch (reagent path -> units remaining).
 	var/list/drip_remaining
 	/// Units of elixir that drip out per process tick.
@@ -152,27 +152,21 @@
 /// valid recipe, commit the reaction so it can drip into the vessel over the coming ticks.
 /obj/machinery/light/rogue/distiller/proc/try_begin_distillation()
 	var/list/outcomes = score_alch_ingredients(ingredients)
-	if(!outcomes.len || outcomes[outcomes[1]] < 5)
+	var/datum/alch_recipe/recipe = best_alch_recipe(outcomes, MACHINE_DISTILLER)
+	if(!recipe)
 		distilling = 0
-		visible_message(span_info("The mixture in [src] fails to bind together at all..."))
+		// If a cauldron-tier recipe cleared instead, point them at a cauldron; otherwise nothing bound.
+		if(outcomes.len && outcomes[outcomes[1]] >= 5)
+			visible_message(span_info("These ingredients would brew fine in a cauldron - the distiller does nothing with them."))
+		else
+			visible_message(span_info("The mixture in [src] fails to bind together at all..."))
 		playsound(src, 'sound/misc/smelter_fin.ogg', 30, FALSE)
 		// Consume the ingredients so the machine doesn't re-heat and re-fail forever.
 		for(var/obj/item/ing in ingredients)
 			qdel(ing)
 		ingredients = list()
 		return
-	var/datum/winning = outcomes[1]
-	var/winning_score = outcomes[winning]
-	if(!istype(winning, /datum/distiller_recipe))
-		distilling = 0
-		visible_message(span_info("These ingredients would brew fine in a cauldron - the distiller does nothing with them."))
-		playsound(src, 'sound/misc/smelter_fin.ogg', 30, FALSE)
-		// Consume the ingredients so the machine doesn't re-heat and re-fail forever.
-		for(var/obj/item/ing in ingredients)
-			qdel(ing)
-		ingredients = list()
-		return
-	var/datum/distiller_recipe/recipe = winning
+	var/winning_score = outcomes[recipe]
 	if(!lastuser)
 		distilling = 0
 		visible_message(span_info("The distiller can't refine anything without an alchemist to guide it."))

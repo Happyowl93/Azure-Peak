@@ -32,9 +32,10 @@
 
 	init_subtypes(/datum/alch_grind_recipe, GLOB.alch_grind_recipes)
 
-	init_subtypes(/datum/alch_cauldron_recipe, GLOB.alch_cauldron_recipes)
-
-	init_subtypes(/datum/distiller_recipe, GLOB.distiller_recipes)
+	for(var/path in subtypesof(/datum/alch_recipe)) // skip the abstract base + machine-tier parents
+		if(is_abstract(path))
+			continue
+		GLOB.alch_recipes += new path()
 
 	build_alch_ingredient_index() // invert recipe ingredient_scores into GLOB.alch_ingredient_recipes
 
