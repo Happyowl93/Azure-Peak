@@ -23,6 +23,8 @@
 	var/maxingredients = 6
 	/// The catalyst - a pinch of gold dust. Required to distill, never consumed.
 	var/obj/item/alch/golddust/catalyst
+	/// Item types accepted in the catalyst slot. Add new catalysts here.
+	var/static/list/catalyst_types = list(/obj/item/alch/golddust)
 	/// A player-fitted vessel (bucket/bottle/etc.) that catches the finished elixir, keeping it clear of the leftover base liquid.
 	var/obj/item/reagent_containers/glass/output_container
 	/// Heat-up counter, counts up to [heatup_ticks] before a locked-in batch starts dripping.
@@ -299,11 +301,8 @@
 	update_icon()
 
 /obj/machinery/light/rogue/distiller/attackby(obj/item/I, mob/user, params)
-	// Gold dust is an /obj/item/alch, so catch it as the catalyst before the ingredient branch below.
-	if(istype(I, /obj/item/alch/golddust))
-		if(catalyst)
-			to_chat(user, span_warning("There is already a catalyst in [src]."))
-			return FALSE
+	// A catalyst item seats in the slot when it's empty; any extra falls through and loads as a normal ingredient.
+	if(!catalyst && is_type_in_list(I, catalyst_types))
 		if(!user.transferItemToLoc(I, src))
 			to_chat(user, span_warning("[I] is stuck to my hand!"))
 			return FALSE
