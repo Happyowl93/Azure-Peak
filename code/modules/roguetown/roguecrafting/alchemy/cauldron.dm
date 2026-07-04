@@ -112,7 +112,7 @@
 					brewing = 21
 				else
 					brewing = 0
-					// Nothing of ours cleared 5; if a distiller-tier recipe did, hint at the distiller.
+					// Nothing of ours cleared 5; if an alembic-tier recipe did, hint at the alembic.
 					if(outcomes.len && outcomes[outcomes[1]] >= 5)
 						src.visible_message(span_warning("These reagents are too refined for a mere cauldron - they must be distilled."))
 					else

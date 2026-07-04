@@ -1417,10 +1417,10 @@
 	skillcraft = /datum/skill/craft/alchemy
 	craftdiff = 1
 
-/datum/crafting_recipe/roguetown/structure/distiller
-	name = "alchemy distiller"
+/datum/crafting_recipe/roguetown/structure/alembic
+	name = "alembic"
 	category = "Misc"
-	result = /obj/machinery/light/rogue/distiller
+	result = /obj/machinery/light/rogue/alembic
 	reqs = list(/obj/item/reagent_containers/glass/bucket/pot/copper = 1, /obj/item/ingot/iron = 1, /obj/item/grown/log/tree/small = 1)
 	verbage_simple = "assemble"
 	verbage = "assembles"

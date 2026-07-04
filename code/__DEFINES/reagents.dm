@@ -4,7 +4,7 @@
 
 // Alchemy machines that can make a given /datum/alch_recipe (bitfield on `machines`).
 #define MACHINE_CAULDRON	(1<<0)
-#define MACHINE_DISTILLER	(1<<1)
+#define MACHINE_ALEMBIC	(1<<1)
 
 #define INJECTABLE		(1<<0)	// Makes it possible to add reagents through droppers and syringes.
 #define DRAWABLE		(1<<1)	// Makes it possible to remove reagents through syringes.

@@ -69,7 +69,7 @@
 
 //Healing potions
 /datum/alch_recipe/cauldron/health_potion
-	machines = MACHINE_CAULDRON | MACHINE_DISTILLER
+	machines = MACHINE_CAULDRON | MACHINE_ALEMBIC
 	name = "Elixir of Health"
 	smells_like = "sweet berries"
 	output_reagents = list(/datum/reagent/medicine/healthpot = 90)
@@ -86,7 +86,7 @@
 	)
 
 /datum/alch_recipe/cauldron/mana_potion
-	machines = MACHINE_CAULDRON | MACHINE_DISTILLER
+	machines = MACHINE_CAULDRON | MACHINE_ALEMBIC
 	name = "Elixir of Mana"
 	smells_like = "power"
 	output_reagents = list(/datum/reagent/medicine/manapot = 90)
@@ -98,7 +98,7 @@
 	)
 
 /datum/alch_recipe/cauldron/stamina_potion
-	machines = MACHINE_CAULDRON | MACHINE_DISTILLER
+	machines = MACHINE_CAULDRON | MACHINE_ALEMBIC
 	name = "Elixir of Stamina"
 	smells_like = "fresh air"
 	output_reagents = list(/datum/reagent/medicine/stampot = 90)

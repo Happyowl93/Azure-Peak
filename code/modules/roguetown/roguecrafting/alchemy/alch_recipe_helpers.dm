@@ -1,4 +1,4 @@
-// Shared alchemy scoring/indexing helpers. The recipe datum itself lives in alch_cauldron_recipe_base.dm.
+// Shared alchemy scoring/indexing helpers. The recipe datum itself lives in alch_recipe_base.dm.
 
 /// Build [GLOB.alch_ingredient_recipes] by inverting every recipe's ingredient_scores into
 /// ingredient type => list(recipe = weight). Run after GLOB.alch_recipes is populated.

@@ -6,7 +6,7 @@
 	w_class = WEIGHT_CLASS_TINY
 	experimental_inhand = TRUE
 	/*
-		Potions: the cauldron/distiller score loaded ingredients against every recipe they feed and make the
+		Potions: the cauldron/alembic score loaded ingredients against every recipe they feed and make the
 		highest-scoring one if it clears 5 points. Which recipe an ingredient feeds, and how strongly (3/2/1),
 		lives on each recipe's ingredient_scores - so an ingredient may feed any number of recipes.
 	*/

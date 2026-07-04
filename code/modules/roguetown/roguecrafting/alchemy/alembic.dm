@@ -1,17 +1,17 @@
 /**
- * The distiller - advanced alchemy.
+ * The alembic - advanced alchemy.
  *
  * Where the cauldron brews *basic* potions from raw ingredients and water, the
- * distiller makes the advanced tier - the MACHINE_DISTILLER /datum/alch_recipe potions, which a
+ * alembic makes the advanced tier - the MACHINE_ALEMBIC /datum/alch_recipe potions, which a
  * plain cauldron refuses. To run one it needs, all at once:
  * - The recipe's base_reagent poured in as a liquid (water for stat potions, or the
  *   weaker potion for the "strong" variants), in sufficient quantity.
  * - Ingredients that smell of the target potion (scored exactly like the cauldron).
  * - A pinch of gold dust as the catalyst, which is required but NEVER consumed.
  */
-/obj/machinery/light/rogue/distiller
-	name = "distiller"
-	desc = "A tangle of copper coils and blown glass over a great alembic. Where a cauldron brews base potions, a distiller refines them into far more potent elixirs."
+/obj/machinery/light/rogue/alembic
+	name = "alembic"
+	desc = "A tangle of copper coils and blown glass over a great alembic. Where a cauldron brews base potions, it refines them into far more potent elixirs."
 	icon = 'icons/roguetown/misc/distillery.dmi'
 	icon_state = "distillery0"
 	base_state = "distillery"
@@ -46,12 +46,12 @@
 	crossfire = FALSE
 	roundstart_forbid = TRUE
 
-/obj/machinery/light/rogue/distiller/Initialize()
+/obj/machinery/light/rogue/alembic/Initialize()
 	// No AMOUNT_VISIBLE - examine() below reports the contents (and their identity) itself.
 	create_reagents(270, DRAINABLE | REFILLABLE)
 	. = ..()
 
-/obj/machinery/light/rogue/distiller/examine(mob/user)
+/obj/machinery/light/rogue/alembic/examine(mob/user)
 	. = ..()
 	// The catalyst cradle.
 	if(catalyst)
@@ -89,7 +89,7 @@
 	if(active_recipe)
 		. += span_info("It is busy distilling, elixir dripping from the spout.")
 
-/obj/machinery/light/rogue/distiller/Destroy()
+/obj/machinery/light/rogue/alembic/Destroy()
 	if(catalyst)
 		catalyst.forceMove(get_turf(src))
 		catalyst = null
@@ -104,7 +104,7 @@
 		qdel(reagents)
 	return ..()
 
-/obj/machinery/light/rogue/distiller/update_icon()
+/obj/machinery/light/rogue/alembic/update_icon()
 	..() // sets the base distillery0/distillery1 icon_state
 	cut_overlays()
 	// Bucket gets its own overlay; every other glass vessel shows the bottle.
@@ -117,18 +117,18 @@
 		drip.color = drip_color
 		add_overlay(drip)
 
-/obj/machinery/light/rogue/distiller/burn_out()
+/obj/machinery/light/rogue/alembic/burn_out()
 	distilling = 0
 	..()
 
-/obj/machinery/light/rogue/distiller/get_mechanics_examine(mob/user)
+/obj/machinery/light/rogue/alembic/get_mechanics_examine(mob/user)
 	. = ..()
-	. += span_info("Pour a base reagent into the distiller, the way you would fill a cauldron with water.")
+	. += span_info("Pour a base reagent into the alembic, the way you would fill a cauldron with water.")
 	. += span_info("Then add ingredients that smell of the potion you wish to refine, and place a catalyst in the appropiate tray; it is not consumed.")
-	. += span_info("Right-click the distiller with a glass vessel in hand to slot it under the spout. Once distilling begins the elixir drips into it slowly; you can remove and swap vessels mid-batch right clicking the machine with another container in your hand. Overflow is wasted.")
+	. += span_info("Right-click the alembic with a glass vessel in hand to slot it under the spout. Once distilling begins the elixir drips into it slowly; you can remove and swap vessels mid-batch right clicking the machine with another container in your hand. Overflow is wasted.")
 	. += span_info("Loading more ingredients that smell of the target potion scales the yield.")
 
-/obj/machinery/light/rogue/distiller/process()
+/obj/machinery/light/rogue/alembic/process()
 	..()
 	if(!on)
 		return
@@ -150,14 +150,14 @@
 
 /// Validate the loaded ingredients/base/catalyst once heat-up finishes, and if they make a
 /// valid recipe, commit the reaction so it can drip into the vessel over the coming ticks.
-/obj/machinery/light/rogue/distiller/proc/try_begin_distillation()
+/obj/machinery/light/rogue/alembic/proc/try_begin_distillation()
 	var/list/outcomes = score_alch_ingredients(ingredients)
-	var/datum/alch_recipe/recipe = best_alch_recipe(outcomes, MACHINE_DISTILLER)
+	var/datum/alch_recipe/recipe = best_alch_recipe(outcomes, MACHINE_ALEMBIC)
 	if(!recipe)
 		distilling = 0
 		// If a cauldron-tier recipe cleared instead, point them at a cauldron; otherwise nothing bound.
 		if(outcomes.len && outcomes[outcomes[1]] >= 5)
-			visible_message(span_info("These ingredients would brew fine in a cauldron - the distiller does nothing with them."))
+			visible_message(span_info("These ingredients would brew fine in a cauldron - the alembic does nothing with them."))
 		else
 			visible_message(span_info("The mixture in [src] fails to bind together at all..."))
 		playsound(src, 'sound/misc/smelter_fin.ogg', 30, FALSE)
@@ -169,7 +169,7 @@
 	var/winning_score = outcomes[recipe]
 	if(!lastuser)
 		distilling = 0
-		visible_message(span_info("The distiller can't refine anything without an alchemist to guide it."))
+		visible_message(span_info("The alembic can't refine anything without an alchemist to guide it."))
 		return
 	// Scale output linearly: total output = winning_score × recipe.potency_per_score.
 	// Strong potions/poisons: 15/score (score 18 → 270u). Stat potions: 7.5/score (half).
@@ -252,7 +252,7 @@
 
 /// Drip a measure of each pending output reagent into the fitted vessel. Anything that
 /// doesn't fit - because the vessel is full or none is fitted - spills out and is lost.
-/obj/machinery/light/rogue/distiller/proc/process_drip()
+/obj/machinery/light/rogue/alembic/proc/process_drip()
 	var/any_left = FALSE
 	var/spilled = FALSE
 	for(var/rpath in drip_remaining)
@@ -284,9 +284,9 @@
 		finish_distillation()
 
 /// End the current batch, whether the vessel caught it all or some spilled.
-/obj/machinery/light/rogue/distiller/proc/finish_distillation()
+/obj/machinery/light/rogue/alembic/proc/finish_distillation()
 	if(active_recipe)
-		visible_message(span_info("The distiller settles, its [active_recipe.smells_like] work complete."))
+		visible_message(span_info("The alembic settles, its [active_recipe.smells_like] work complete."))
 		playsound(src, 'sound/misc/smelter_fin.ogg', 30, FALSE)
 	active_recipe = null
 	drip_remaining = null
@@ -294,7 +294,7 @@
 	distilling = 0
 	update_icon()
 
-/obj/machinery/light/rogue/distiller/attackby(obj/item/I, mob/user, params)
+/obj/machinery/light/rogue/alembic/attackby(obj/item/I, mob/user, params)
 	// A catalyst item seats in the slot when it's empty; any extra falls through and loads as a normal ingredient.
 	if(!catalyst && is_type_in_list(I, catalyst_types))
 		if(!user.transferItemToLoc(I, src))
@@ -336,7 +336,7 @@
 		return TRUE
 	..()
 
-/obj/machinery/light/rogue/distiller/attack_right(mob/user)
+/obj/machinery/light/rogue/alembic/attack_right(mob/user)
 	// Right-click with a glass vessel in hand to fit it under the spout.
 	var/obj/item/I = user.get_active_held_item()
 	if(istype(I, /obj/item/reagent_containers/glass))
@@ -357,9 +357,9 @@
 		return TRUE
 	return ..()
 
-/obj/machinery/light/rogue/distiller/attack_hand(mob/user, params)
+/obj/machinery/light/rogue/alembic/attack_hand(mob/user, params)
 	if(on)
-		// Allow removing the output vessel even while the distiller is running, so
+		// Allow removing the output vessel even while the alembic is running, so
 		// alchemists can swap in a fresh container to catch the rest of a batch.
 		if(output_container)
 			var/obj/item/reagent_containers/glass/vessel = output_container
@@ -401,7 +401,7 @@
 	to_chat(user, span_info("It's empty."))
 	return ..()
 
-/obj/machinery/light/rogue/distiller/onkick(mob/user)
+/obj/machinery/light/rogue/alembic/onkick(mob/user)
 	if(catalyst)
 		catalyst.forceMove(get_turf(user))
 		catalyst = null

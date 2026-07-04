@@ -155,7 +155,7 @@
 	types = list(
 		/datum/crafting_recipe/roguetown/structure/alch,
 		/datum/crafting_recipe/roguetown/structure/cauldronalchemy,
-		/datum/crafting_recipe/roguetown/structure/distiller,
+		/datum/crafting_recipe/roguetown/structure/alembic,
 		/datum/crafting_recipe/roguetown/alchemy,
 		/datum/alch_grind_recipe,
 		/datum/alch_recipe
