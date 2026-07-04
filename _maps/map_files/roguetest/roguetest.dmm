@@ -1245,6 +1245,11 @@
 /obj/machinery/light/rogue/candle/blue,
 /turf/open/floor/rogue/blocks/stonered/tiny,
 /area/rogue/indoors)
+"HM" = (
+/obj/structure/table/optable,
+/obj/item/storage/belt/rogue/surgery_bag/full,
+/turf/open/floor/rogue/blocks/newstone/alt,
+/area/rogue/indoors/town/physician)
 "HO" = (
 /obj/structure/table/wood{
 	dir = 1;
@@ -1452,6 +1457,7 @@
 /obj/structure/table/cooling,
 /obj/item/reagent_containers/glass/mortar,
 /obj/item/pestle,
+/obj/machinery/light/rogue/candle,
 /turf/open/floor/rogue/blocks/newstone/alt,
 /area/rogue/indoors/town/physician)
 "Oj" = (
@@ -1553,9 +1559,7 @@
 /turf/open/floor/rogue/dirt/road,
 /area/rogue/indoors)
 "Sy" = (
-/obj/structure/table/optable,
-/obj/item/storage/belt/rogue/surgery_bag/full,
-/obj/machinery/light/rogue/candle,
+/obj/machinery/light/rogue/alembic,
 /turf/open/floor/rogue/blocks/newstone/alt,
 /area/rogue/indoors/town/physician)
 "SE" = (
@@ -2875,8 +2879,8 @@ ev
 AO
 LM
 Sy
+HM
 zr
-bc
 bc
 tX
 yK
